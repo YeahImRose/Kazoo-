@@ -5,94 +5,156 @@
  *      Author: Lunar Dust
  */
 
-#include <iostream>
-#include <string>
-#include <stdio.h>
-#include <stdlib.h>
-
 #ifndef MAIN_H_
 #define MAIN_H_
 
-//A lot of variables
-int twait;
-int weapon;
+#include <ncurses.h>
+#include <menu.h>
+#include <string.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <iostream>
+#include <string>
+#include <vector>
+
 //Weapon list: 0 hands, 1 branch, 2 dagger, 3 dull sword, 4 Blade Staff, 5 sharp spear, 6 polished axe, 7 The Blade of Honking
-int armor;
+int weapon;
 //Armor list: 0 Cloth shirt, 1 Leather Breastplate, 2 Chainmail Breastplate, 3 Scale Breastplate, 4 Crystal Breastplate, 5 Cloak of Shadows, 6 Magic Shield, 7 Kazoo Shield of Death
-int min_dam;
-int max_dam;
-int dodges;
-int dodge_act;
-int damage;
-int max_hp;
-int max_mana;
-int level;
-int max_level;
-std::string skills;
-std::string skills_thing;
-int skill_energy;
-int max_energy;
-std::string spells;
-std::string spells_thing;
-int exp;
-int evolve_count;
-int points;
-int game_diff;
-int classsc;
-int boss;
-int bossattackchoice;
-std::string triggers;
-std::string inventory;
-//Words that will be checked for later
-std::string n_words [] = {"n", "north"};
-std::string s_words [] = {"s", "south"};
-std::string e_words [] = {"e", "east"};
-std::string w_words [] = {"w", "west"};
-std::string u_words [] = {"u", "up"};
-std::string d_words [] = {"d", "down"};
-std::string yes_words [] = {"yes", "y", "true", "indeed", "yeah", "afirmative"};
+int armor;
+int points, difficulty, classsc, usr, tut_finished;
+int agil, dodge, dam;
+int highlight;
+int n_choices, i, c, ch, t, im;
+int enerand, maxhp;
+int ulines, lines = 0;
+int row, col;
+int page = 0; int pages;
+bool scrn = false;
+
+std::string triggers[25];
+/*std::string yes_words [] = {"yes", "y", "true", "indeed", "yeah", "afirmative"};
 std::string lights_words [] = {"switch", "lights", "light", "torch"};
 std::string spellbook_words [] = {"spellbook", "book", "runebook"};
 std::string take_words [] = {"take", "grab", "pick", "get", "aquire", "nab", "steal"};
-std::string use_words[] = {"use", "eat", "read", "drink", "flip", "turn", "hit"};
-int stop;
-int enemy_set;
-//Time removed in v0.1.4 (Re-implementation being tested in v0.3) (Completely broken, but I decided to leave the code in)
-//time 0
-int encounter_time;
-int skip;
-std::string enemy_type;
-int enemy_dam;
-int enemy_dodge;
-std::string enemy_buffs;
-std::string enemy_debuffs;
-int enemy_buff_timer;
-int enemy_debuff_timer;
-std::string enemy_info;
-std::string enemy_dam_info;
-int hp;
-int def;
-int mana;
-int var_set;
-std::string player_buffs;
-std::string player_debuffs;
-int player_buff_timer;
-int player_debuff_timer;
-int firebolt_level;
-int frost_level;
-int poison_level;
-int lifesteal_level;
-int bolt_level;
-int quake_level;
-int heal_level;
-int stun_level;
-int exp_limit;
-std::string kills;
-int encounter;
-std::string history;
-int tut_finished;
-int loadyload;
-std::string dothing;
-int acted;
+std::string use_words[] = {"use", "eat", "read", "drink", "flip", "turn", "hit"};*/
+std::string kills[100];
+std::string tempstr;
+std::vector<std::string> text, queue;
+
+struct player {
+	std::string name[1];
+	int stat[6]; //HP, attack, defense, agility, mana, intelligence
+	int xp[4]; //Current xp, xp needed for next level, current level, max level
+	int spell[16]; //0-7= Has: firebolt, frost, poison, lifesteal, bolt, quake, heal, stun/ 8-15=respective spell levels
+	bool buff[12]; //Regen, def up, atk up, agi up, counter, stealth(dodge up), poison, def down, atk down, agi down, paralysis/frozen, dodge down
+	int times[12]; //Buff timers for regen, def up, atk up, agi up, counter, stealth(dodge up), poison, def down, atk down, agi down, paralysis/frozen, dodge down
+};
+
+struct enemy {
+	std::string info[2]; //Name, info
+	int stat[4]; //HP, damage, defense, agility
+	bool buff[12]; //Regen, def up, atk up, agi up, counter, stealth(dodge up), poison, def down, atk down, agi down, paralysis/frozen, dodge down
+	int times[12]; //Buff timers for regen, def up, atk up, agi up, counter, stealth(dodge up), poison, def down, atk down, agi down, paralysis/frozen, dodge down
+} now;
+
+enum statusBuff {
+	regen=0,
+	defup=1,
+	atkup=2,
+	agiup=3,
+	cntr=4,
+	ddgup=5,
+	psn=6,
+	defdn=7,
+	atkdn=8,
+	agidn=9,
+	frzn=10,
+	ddgdn=11
+};
+
+enum spellEnum {
+	firebolt=0,
+	frost=1,
+	bolt=2,
+	quake=3,
+	poison=4,
+	lifesteal=5,
+	heal=6,
+	lfirebolt=7,
+	lfrost=8,
+	lbolt=9,
+	lquake=10,
+	lpoison=11,
+	llifesteal=12,
+	lheal=13
+};
+
+//Setting colors for different OS's
+#ifdef _WIN32
+#error "UNSPPORTED SYTEM!"
+#elif __APPLE__
+enum colors {
+	black=0,
+	crimson=1,
+	dgreen=2,
+	dyellow=3,
+	dblue=4,
+	dmagenta=5,
+	dcyan=6,
+	dwhite=7,
+	gray=8,
+	red=9,
+	green=10,
+	yellow=11,
+	blue=12,
+	magenta=13,
+	cyan=14,
+	white=15,
+	orange=202,
+	pink=201,
+	deepblue=21,
+	purple=93
+};
+#elif __linux__
+enum colors {
+	black=0,
+	dred=1,
+	dgreen=2,
+	dyellow=3,
+	dblue=4,
+	dmagenta=5,
+	dcyan=6,
+	dwhite=7,
+	gray=8,
+	red=9,
+	green=10,
+	yellow=11,
+	blue=12,
+	magenta=13,
+	cyan=14,
+	white=15,
+	orange=202,
+	pink=201,
+	deepblue=21,
+	purple=93
+};
+#else
+#error "Unknown compiler"
+#endif
+
+int cmenu(int, std::vector<std::string>);
+void clean();
+void battle();
+void prompt();
+void death();
+void plract(int);
+void enemyact();
+void nprint();
+void printu(std::string);
+void prints(std::string);
+void printi(std::string, WINDOW);
+void enemydefeat();
+void mainm();
+void makeitems(int);
 
 #endif /* MAIN_H_ */
