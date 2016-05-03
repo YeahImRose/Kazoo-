@@ -1,6 +1,6 @@
 CXX=g++
 CXXFLAGS=-Wall
-OBJS=main.o main.d
+OBJS=main.o
 EXECUTABLE=main
 
 all: $(EXECUTABLE)
@@ -13,6 +13,5 @@ $(EXECUTABLE): $(OBJS)
 clean:
 	rm -f $(EXECUTABLE)
 	rm -f main.o 
-	rm -f main.d
 
 main.o: main.cpp
