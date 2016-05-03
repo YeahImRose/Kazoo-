@@ -47,10 +47,13 @@ void clean() {
 }
 
 int main() {
+	using namespace std;
 	system("printf '\e[8;30;125t'");
 	plr.spell[firebolt] = 1;
 	plr.spell[lfirebolt] = 1; plr.spell[lfrost] = 1; plr.spell[lbolt] = 1; plr.spell[lquake] = 1;
 	plr.spell[lpoison] = 1; plr.spell[llifesteal] = 1; plr.spell[lheal] = 1;
+	cout << "What is your name?\n";
+	cin >> plr.name[0];
 	initscr();
 	signal(SIGWINCH, NULL);
 	prints("This is the remake of the original Kazoo Quest.");
@@ -144,7 +147,6 @@ void makeitems(int set) {
 		items[i] = new_item(inventory[page][i].c_str(), inventory[page+5][i].c_str());
 	items[n_choices] = (ITEM *)NULL;
 	menu = new_menu((ITEM **)items);
-	system("echo yup");
 	cmenu(set, text);
 }
 
@@ -206,7 +208,7 @@ int cmenu(int set, std::vector<std::string> text) {
 		prints(str);
 	}
 
-	mvprintw(0, col * 4 / 5, "Player stats:");
+	mvprintw(0, col * 4 / 5, (plr.name[0] + ":").c_str());
 	printu("HP: " + std::to_string(plr.stat[0]));
 	printu("Mana: " + std::to_string(plr.stat[4]));
 	printu("Attack: " + std::to_string(plr.stat[1]));
@@ -361,6 +363,12 @@ void enemyact() {
 	if(plr.stat[0] <= 0) {
 		death();
 	}
+	for(i=0; i < 10; i++) {
+		if(plr.times[i] > 0)
+			plr.times[i]--;
+		if(plr.times[i] == 0)
+			plr.buff[i] = false;
+	}
 	prompt();
 }
 
@@ -451,6 +459,9 @@ void plract(int usr) {
 			dam = plr.stat[5];
 			int diff = dam * 20 / 100;
 			dam = (dam-diff) + rand() % (int)((dam+diff)-(dam-diff)+1);
+			if(plr.buff[4] == true)
+				//Int buff adds extra 40% to magic attacks
+				dam += (2*diff);
 			now.stat[0] -= dam;
 			tempstr = "You dealt " + std::to_string(dam) + " to the " + now.info[0] + "!";
 			queue.push_back("You dealt " + std::to_string(dam) + " to the " + now.info[0] + "!");
@@ -464,6 +475,9 @@ void plract(int usr) {
 			dam = plr.stat[5];
 			int diff = dam * 20 / 100;
 			dam = (dam-diff) + rand() % (int)((dam+diff)-(dam-diff)+1);
+			if(plr.buff[4] == true)
+				//Int buff adds extra 40% to magic attacks
+				dam += (2*diff);
 			now.stat[0] -= dam;
 			tempstr = "You dealt " + std::to_string(dam) + " to the " + now.info[0] + "!";
 			queue.push_back("You dealt " + std::to_string(dam) + " to the " + now.info[0] + "!");
@@ -477,6 +491,9 @@ void plract(int usr) {
 			dam = plr.stat[5];
 			int diff = dam * 20 / 100;
 			dam = (dam-diff) + rand() % (int)((dam+diff)-(dam-diff)+1);
+			if(plr.buff[4] == true)
+				//Int buff adds extra 40% to magic attacks
+				dam += (2*diff);
 			now.stat[0] -= dam;
 			tempstr = "You dealt " + std::to_string(dam) + " to the " + now.info[0] + "!";
 			queue.push_back("You dealt " + std::to_string(dam) + " to the " + now.info[0] + "!");
@@ -490,6 +507,9 @@ void plract(int usr) {
 			dam = plr.stat[5];
 			int diff = dam * 20 / 100;
 			dam = (dam-diff) + rand() % (int)((dam+diff)-(dam-diff)+1);
+			if(plr.buff[4] == true)
+				//Int buff adds extra 40% to magic attacks
+				dam += (2*diff);
 			now.stat[0] -= dam;
 			tempstr = "You dealt " + std::to_string(dam) + " to the " + now.info[0] + "!";
 			queue.push_back("You dealt " + std::to_string(dam) + " to the " + now.info[0] + "!");
@@ -535,7 +555,12 @@ void plract(int usr) {
 		text.resize(0);
 		text.push_back("Select item:");
 		int usr = cmenu(100, text);
-
+		if(usr == 1) {
+			queue.push_back("You read the book...");
+			queue.push_back("You suddenly feel smarter!");
+			plr.buff[4] = true;
+			plr.times[4] = 3;
+		}
 		//queue.push_back("Not yet implemented!");
 		prompt();
 	}
