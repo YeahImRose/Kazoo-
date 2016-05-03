@@ -14,8 +14,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <iostream>
+#include <fstream>
 #include <string>
 #include <vector>
+//Planning on eventually adding sounds
+#import <OpenAL/al.h>
+#import <OpenAL/alc.h>
+#import <AudioToolbox/AudioToolbox.h>
 
 //Weapon list: 0 hands, 1 branch, 2 dagger, 3 dull sword, 4 Blade Staff, 5 sharp spear, 6 polished axe, 7 The Blade of Honking
 int weapon;
@@ -46,15 +51,15 @@ struct player {
 	int stat[6]; //HP, attack, defense, agility, mana, intelligence
 	int xp[4]; //Current xp, xp needed for next level, current level, max level
 	int spell[16]; //0-7= Has: firebolt, frost, poison, lifesteal, bolt, quake, heal, stun/ 8-15=respective spell levels
-	bool buff[12]; //Regen, def up, atk up, agi up, counter, stealth(dodge up), poison, def down, atk down, agi down, paralysis/frozen, dodge down
-	int times[12]; //Buff timers for regen, def up, atk up, agi up, counter, stealth(dodge up), poison, def down, atk down, agi down, paralysis/frozen, dodge down
+	bool buff[10]; //Regen, def up, atk up, agi up, int up, poison, def down, atk down, agi down, int down, paralysis/frozen
+	int times[10]; //Buff timers for regen, def up, atk up, agi up, int up, poison, def down, atk down, agi down, int down, paralysis/frozen
 };
 
 struct enemy {
 	std::string info[2]; //Name, info
 	int stat[4]; //HP, damage, defense, agility
-	bool buff[12]; //Regen, def up, atk up, agi up, counter, stealth(dodge up), poison, def down, atk down, agi down, paralysis/frozen, dodge down
-	int times[12]; //Buff timers for regen, def up, atk up, agi up, counter, stealth(dodge up), poison, def down, atk down, agi down, paralysis/frozen, dodge down
+	bool buff[10]; //Regen, def up, atk up, agi up, int up, poison, def down, atk down, agi down, int down, paralysis/frozen
+	int times[10]; //Buff timers for regen, def up, atk up, agi up, int up, poison, def down, atk down, agi down, int down, paralysis/frozen
 } now;
 
 enum statusBuff {
@@ -62,14 +67,13 @@ enum statusBuff {
 	defup=1,
 	atkup=2,
 	agiup=3,
-	cntr=4,
-	ddgup=5,
-	psn=6,
-	defdn=7,
-	atkdn=8,
-	agidn=9,
+	intup=4,
+	psn=5,
+	defdn=6,
+	atkdn=7,
+	agidn=8,
+	intdwn=9,
 	frzn=10,
-	ddgdn=11
 };
 
 enum spellEnum {

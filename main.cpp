@@ -14,28 +14,29 @@ WINDOW *user;
 player plr ={{"Player"}, {25, 7, 1, 2, 15, 10}, {0, 20, 1, 10}};
 
 const char *choices[][11] = {
-		{"Test battle", "Exit"},
+		{"Test battle", "Save", "Load", "Exit"},
 		{"Training dummy", "Fodder enemy", "Test boss", "Back"},
 		{"Attack", "Spells", "Check enemy", "Items", "RUNNN!!!"},
 		{"Firebolt", "Frost", "Bolt", "Quake", "Poison", "Lifesteal", "Heal"},
 		{},
-		{"   Initiates debug battle", "   Closes the game"},
+		{"   Initiates debug battle", "   Save game", "   Load game", "   Closes the game"},
 		{"   Not implemented", "   Could be a bit stronger", "   Not implemented", "   Return to main menu"},
 		{"   Basic attack", "   Pew pew magic!", "   Display enemy stats and info", "   View/Use items", "   Run away"},
 		{"   An incendiary explosion with a chance to inflict burn", "   An ancient spell from the ice age- chance to inflict freeze", "   A strike of lightning from the sky- chance to inflict paralysis", "   A spell that erupts the ground to pummel the enemy", "   A venomous spell that will probably inflict poison", "   A spell from the vampire underworld that absorbs the enemy's health", "   An angelic spell to restore some of your health"},
 		{}
 	};
-int c_choices[4] = {2, 4, 5, 7};
+int c_choices[4] = {4, 4, 5, 7};
 
 std::string inventory[][10] = {
 		{"Book", "Another Book", "Random Book", "Long Book", "Short Book"},
 		{"Amazing Book", "MLG Book", "Fab Book", "Debug Book", "Kappa Book"},
 		{"Book Book", "Not Book", "Imaginary Book", "Trippy Book", "THE BOOK"},
-		{},
+		{"Picture Book", "Coloring Book", "Hardcover Book", "Mak Book", "Biilbe"},
 		{},
 		{"   A simple book", "   Another simple book", "   You don't know where this came from", "   The weight of this book is astonishing!", "   It's just a piece of paper"},
 		{"   You have read this book hundreds of times and still love it", "   A book that is 2 1337 4 u", "   The fab levels of this book are beyond comprehension", "   A book that kills bugs- a programmers dream", "   A book full of the greatest memes in history"},
-		{"   A book-ish book", "   What even?", "   The book you wanted to write but couldn't be bothered to", "   Now with 420 pages!", "   The only book"}
+		{"   A book-ish book", "   What even?", "   The book you wanted to write but couldn't be bothered to", "   Now with 420 pages!", "   The only book"},
+		{"   A book for young childrens", "   A book for da colors", "   Might hurt if you hit yourself with it", "   A non-copyrighted book", "   A famous religious book"}
 };
 
 void clean() {
@@ -52,8 +53,16 @@ int main() {
 	plr.spell[firebolt] = 1;
 	plr.spell[lfirebolt] = 1; plr.spell[lfrost] = 1; plr.spell[lbolt] = 1; plr.spell[lquake] = 1;
 	plr.spell[lpoison] = 1; plr.spell[llifesteal] = 1; plr.spell[lheal] = 1;
+	system("clear");
 	cout << "What is your name?\n";
-	cin >> plr.name[0];
+	getline(cin, plr.name[0]);
+	if(plr.name[0] == "llama")
+		exit(EXIT_SUCCESS);
+	if(plr.name[0] == "Llama")
+		exit(EXIT_SUCCESS);
+	if(plr.name[0].length() > 10) {
+			cout << "Name too long!\n"; main();
+	}
 	initscr();
 	signal(SIGWINCH, NULL);
 	prints("This is the remake of the original Kazoo Quest.");
@@ -61,6 +70,12 @@ int main() {
 	prints("Press any key to continue.");
 	getch();
 	mainm();
+}
+
+template<typename T>
+void write_pod(std::ofstream& out, T& t)
+{
+  out.write(reinterpret_cast<char*>(&t), sizeof(T));
 }
 
 void mainm() {
@@ -75,6 +90,46 @@ void mainm() {
 		battle();
 	}
 	if(usr == 2) {
+		std::ofstream file;
+		file.open("savegame");
+		file << plr.name[0] << "\n";
+		for(i=0;i < 6; i++)
+			file << plr.stat[i] << "\n";
+		for(i=0; i < 4; i++)
+			file << plr.xp[i] << "\n";
+		for(i=0; i < 10; i++)
+			file << plr.spell[i] << "\n";
+		file.close();
+		queue.push_back("Game saved!");
+		mainm();
+	}
+	if(usr == 3) {
+		std::string line;
+		std::ifstream file;
+		file.open("savegame");
+
+		if(!file.is_open()) {
+			perror("Error open");
+			mainm();
+		}
+		//Random temp :^ )
+		for(int rt = 0; getline(file, line); rt++) {
+			if(rt == 0)
+				plr.name[0] = line;
+			if(rt > 0)
+				if(rt < 5)
+					plr.stat[rt] = std::stoi(line);
+			if (rt > 4)
+				if(rt < 9)
+					plr.xp[rt] = std::stoi(line);
+			if(rt > 9)
+				plr.spell[rt] = std::stoi(line);
+		}
+		file.close();
+		queue.push_back("Game loaded!");
+		mainm();
+	}
+	if(usr == 4) {
 		clean();
 		delwin(wmenu);
 		delwin(user);
