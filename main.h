@@ -26,14 +26,17 @@
 int weapon;
 //Armor list: 0 Cloth shirt, 1 Leather Breastplate, 2 Chainmail Breastplate, 3 Scale Breastplate, 4 Crystal Breastplate, 5 Cloak of Shadows, 6 Magic Shield, 7 Kazoo Shield of Death
 int armor;
+//Game variables
 int points, difficulty, classsc, usr, tut_finished;
-int agil, dodge, dam;
-int highlight;
-int n_choices, i, c, ch, t, im;
-int enerand, maxhp;
+//Battle variables
+int agil, dodge, dam, enerand, maxhp;
+//Menu variables
+int highlight, n_choices, i, c, ch, t, im;
 int ulines, lines = 0;
 int row, col;
 int page = 0; int pages;
+int noi;
+//Menu lib variable
 bool scrn = false;
 
 std::string triggers[25];
@@ -55,6 +58,15 @@ struct player {
 	int times[10]; //Buff timers for regen, def up, atk up, agi up, int up, poison, def down, atk down, agi down, int down, paralysis/frozen
 };
 
+struct ally {
+	std::string info[3]; //Name, info, skill
+	int stat[4]; //HP, damage, defense, agility
+	int xp[4]; //Current xp, xp needed for next level, current level, max level
+	int skill[2]; //Has skill, skill level
+	bool buff[10]; //Regen, def up, atk up, agi up, int up, poison, def down, atk down, agi down, int down, paralysis/frozen
+	int times[10]; //Buff timers for regen, def up, atk up, agi up, int up, poison, def down, atk down, agi down, int down, paralysis/frozen
+} part;
+
 struct enemy {
 	std::string info[2]; //Name, info
 	int stat[4]; //HP, damage, defense, agility
@@ -74,6 +86,13 @@ enum statusBuff {
 	agidn=8,
 	intdwn=9,
 	frzn=10,
+};
+
+enum allies {
+	aprime=0,
+	anep,
+	averne,
+	achen
 };
 
 enum spellEnum {
@@ -153,12 +172,13 @@ void prompt();
 void death();
 void plract(int);
 void enemyact();
-void nprint();
 void printu(std::string);
 void prints(std::string);
 void printi(std::string, WINDOW);
 void enemydefeat();
 void mainm();
+void save();
+void load();
 void makeitems(int);
 
 #endif /* MAIN_H_ */

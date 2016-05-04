@@ -1,5 +1,6 @@
-#include "enemies.h"
 #include "main.h"
+#include "enemies.h"
+#include "allies.h"
 
 #define row 30
 #define col 125
@@ -13,29 +14,39 @@ WINDOW *user;
 
 player plr ={{"Player"}, {25, 7, 1, 2, 15, 10}, {0, 20, 1, 10}};
 
-const char *choices[][11] = {
-		{"Test battle", "Save", "Load", "Exit"},
+const char *choices[][20] = {
+		{"Test battle", "Save", "Load", "Options", "Exit"},
 		{"Training dummy", "Fodder enemy", "Test boss", "Back"},
 		{"Attack", "Spells", "Check enemy", "Items", "RUNNN!!!"},
 		{"Firebolt", "Frost", "Bolt", "Quake", "Poison", "Lifesteal", "Heal"},
+		{"Liberty Prime", "Nep-Nep", "Something-something Verne", "Chen"},
+		{"Enable allies", "Delete save", "Back"},
 		{},
-		{"   Initiates debug battle", "   Save game", "   Load game", "   Closes the game"},
+		{},
+		{},
+		{"Yes", "No"},
+		{"   Initiates debug battle", "   Save game", "   Load game", "   Open options menu", "   Closes the game"},
 		{"   Not implemented", "   Could be a bit stronger", "   Not implemented", "   Return to main menu"},
 		{"   Basic attack", "   Pew pew magic!", "   Display enemy stats and info", "   View/Use items", "   Run away"},
 		{"   An incendiary explosion with a chance to inflict burn", "   An ancient spell from the ice age- chance to inflict freeze", "   A strike of lightning from the sky- chance to inflict paralysis", "   A spell that erupts the ground to pummel the enemy", "   A venomous spell that will probably inflict poison", "   A spell from the vampire underworld that absorbs the enemy's health", "   An angelic spell to restore some of your health"},
-		{}
+		{"   Throws nukes to defeat communism", "   What do you mean, \"Fourth Wall\"?", "   <Insert lore here>", "   Adorbs"},
+		{"   Enables allies", "   Deletes your save...", "   Return to main menu"},
+		{},
+		{},
+		{},
+		{" ", " "}
 	};
-int c_choices[4] = {4, 4, 5, 7};
+int c_choices[10] = {5, 4, 5, 7, 4, 3, 0, 0, 0, 2};
 
 std::string inventory[][10] = {
-		{"Book", "Another Book", "Random Book", "Long Book", "Short Book"},
-		{"Amazing Book", "MLG Book", "Fab Book", "Debug Book", "Kappa Book"},
-		{"Book Book", "Not Book", "Imaginary Book", "Trippy Book", "THE BOOK"},
+		{"Book", "Another Book", "Random Book", "Liberty Book", "Short Book"},
+		{"Honking Book", "MLG Book", "Fab Book", "Debug Book", "Kappa Book"},
+		{"Book Book", "Histoire's Tome/Book", "Imaginary Book", "Trippy Book", "THE BOOK"},
 		{"Picture Book", "Coloring Book", "Hardcover Book", "Mak Book", "Biilbe"},
 		{},
-		{"   A simple book", "   Another simple book", "   You don't know where this came from", "   The weight of this book is astonishing!", "   It's just a piece of paper"},
-		{"   You have read this book hundreds of times and still love it", "   A book that is 2 1337 4 u", "   The fab levels of this book are beyond comprehension", "   A book that kills bugs- a programmers dream", "   A book full of the greatest memes in history"},
-		{"   A book-ish book", "   What even?", "   The book you wanted to write but couldn't be bothered to", "   Now with 420 pages!", "   The only book"},
+		{"   A simple book", "   Another simple book", "   You don't know where this came from", "   The cover shows an eagle flying over thousands of tanks", "   It's just a piece of paper"},
+		{"   A mysterious honking is always emitted from this book", "   A book that is 2 1337 4 u", "   The fab levels of this book are beyond comprehension", "   A book that kills bugs- a programmers dream", "   A book full of the greatest memes in history"},
+		{"   A book-ish book", "   How did this get here?", "   The book you wanted to write but couldn't be bothered to", "   Now with 420 pages!", "   The only book"},
 		{"   A book for young childrens", "   A book for da colors", "   Might hurt if you hit yourself with it", "   A non-copyrighted book", "   A famous religious book"}
 };
 
@@ -49,19 +60,42 @@ void clean() {
 
 int main() {
 	using namespace std;
+	int newg = 0;
 	system("printf '\e[8;30;125t'");
 	plr.spell[firebolt] = 1;
 	plr.spell[lfirebolt] = 1; plr.spell[lfrost] = 1; plr.spell[lbolt] = 1; plr.spell[lquake] = 1;
 	plr.spell[lpoison] = 1; plr.spell[llifesteal] = 1; plr.spell[lheal] = 1;
 	system("clear");
-	cout << "What is your name?\n";
-	getline(cin, plr.name[0]);
-	if(plr.name[0] == "llama")
-		exit(EXIT_SUCCESS);
-	if(plr.name[0] == "Llama")
-		exit(EXIT_SUCCESS);
-	if(plr.name[0].length() > 10) {
-			cout << "Name too long!\n"; main();
+	if (FILE *file = fopen("savegame", "r")) {
+		fclose(file);
+		text.resize(0);
+		text.push_back("Would you like to load your save?");
+		noi = 1;
+		usr = cmenu(9, text);
+		if(usr == 1) {
+			load();
+		}
+		if(usr == 2) {
+			newg = 1;
+		}
+	} else {
+		newg = 1;
+	}
+	if(newg == 1) {
+		erase();
+		system("clear");
+		move(1, 0);
+		endwin();
+		cout << "What is your name?(Max 16 characters)\n";
+		getline(cin, plr.name[0]);
+		if(plr.name[0] == "llama")
+			exit(EXIT_SUCCESS);
+		if(plr.name[0] == "Llama")
+			exit(EXIT_SUCCESS);
+		if(plr.name[0].length() > 16) {
+			cout << "Name too long!\n";
+			main();
+		}
 	}
 	initscr();
 	signal(SIGWINCH, NULL);
@@ -72,10 +106,44 @@ int main() {
 	mainm();
 }
 
-template<typename T>
-void write_pod(std::ofstream& out, T& t)
-{
-  out.write(reinterpret_cast<char*>(&t), sizeof(T));
+void save() {
+	std::ofstream file;
+	file.open("savegame");
+	file << plr.name[0] << "\n";
+	for(i=0;i < 6; i++)
+		file << plr.stat[i] << "\n";
+	for(i=0; i < 4; i++)
+		file << plr.xp[i] << "\n";
+	for(i=0; i < 10; i++)
+		file << plr.spell[i] << "\n";
+	file.close();
+	queue.push_back("Game saved!");
+}
+
+void load() {
+	std::string line;
+	std::ifstream file;
+	file.open("savegame");
+
+	if(!file.is_open()) {
+		perror("Error open");
+		mainm();
+	}
+	//Random temp :^ )
+	for(int rt = 0; getline(file, line); rt++) {
+		if(rt == 0)
+			plr.name[0] = line;
+		if(rt > 0)
+			if(rt < 5)
+				plr.stat[rt] = std::stoi(line);
+		if (rt > 4)
+			if(rt < 9)
+				plr.xp[rt] = std::stoi(line);
+		if(rt > 9)
+			plr.spell[rt] = std::stoi(line);
+	}
+	file.close();
+	queue.push_back("Game loaded!");
 }
 
 void mainm() {
@@ -90,46 +158,18 @@ void mainm() {
 		battle();
 	}
 	if(usr == 2) {
-		std::ofstream file;
-		file.open("savegame");
-		file << plr.name[0] << "\n";
-		for(i=0;i < 6; i++)
-			file << plr.stat[i] << "\n";
-		for(i=0; i < 4; i++)
-			file << plr.xp[i] << "\n";
-		for(i=0; i < 10; i++)
-			file << plr.spell[i] << "\n";
-		file.close();
-		queue.push_back("Game saved!");
+		save();
 		mainm();
 	}
 	if(usr == 3) {
-		std::string line;
-		std::ifstream file;
-		file.open("savegame");
-
-		if(!file.is_open()) {
-			perror("Error open");
-			mainm();
-		}
-		//Random temp :^ )
-		for(int rt = 0; getline(file, line); rt++) {
-			if(rt == 0)
-				plr.name[0] = line;
-			if(rt > 0)
-				if(rt < 5)
-					plr.stat[rt] = std::stoi(line);
-			if (rt > 4)
-				if(rt < 9)
-					plr.xp[rt] = std::stoi(line);
-			if(rt > 9)
-				plr.spell[rt] = std::stoi(line);
-		}
-		file.close();
-		queue.push_back("Game loaded!");
+		load();
 		mainm();
 	}
 	if(usr == 4) {
+		text.push_back("Not implemented yet!");
+		mainm();
+	}
+	if(usr == 5) {
 		clean();
 		delwin(wmenu);
 		delwin(user);
@@ -197,6 +237,7 @@ void printi(std::string text, WINDOW *info) {
 
 void makeitems(int set) {
 	clean();
+	//Note to self: change how n_choices works here
 	n_choices = 5;
 	for(i = 0; i < n_choices; ++i)
 		items[i] = new_item(inventory[page][i].c_str(), inventory[page+5][i].c_str());
@@ -229,7 +270,7 @@ int cmenu(int set, std::vector<std::string> text) {
 		n_choices = c_choices[set];
 		items = (ITEM **)calloc(n_choices + 1, sizeof(ITEM *));
 		for(i = 0; i < n_choices; ++i)
-			items[i] = new_item(choices[set][i], choices[set+5][i]);
+			items[i] = new_item(choices[set][i], choices[set+10][i]);
 		items[n_choices] = (ITEM *)NULL;
 		menu = new_menu((ITEM **)items);
 	}
@@ -262,17 +303,18 @@ int cmenu(int set, std::vector<std::string> text) {
 		std::string str = queue[i];
 		prints(str);
 	}
-
-	mvprintw(0, col * 4 / 5, (plr.name[0] + ":").c_str());
-	printu("HP: " + std::to_string(plr.stat[0]));
-	printu("Mana: " + std::to_string(plr.stat[4]));
-	printu("Attack: " + std::to_string(plr.stat[1]));
-	printu("Intelligence: " + std::to_string(plr.stat[5]));
-	printu("Defense: " + std::to_string(plr.stat[2]));
-	printu("Agility: " + std::to_string(plr.stat[3]));
-	printu("");
-	printu("Level: " + std::to_string(plr.xp[2]));
-	printu("EXP: " + std::to_string(plr.xp[0]) + "/" + std::to_string(plr.xp[1]));
+	if(noi == 0) {
+		mvprintw(0, col * 4 / 5, (plr.name[0] + ":").c_str());
+		printu("HP: " + std::to_string(plr.stat[0]));
+		printu("Mana: " + std::to_string(plr.stat[4]));
+		printu("Attack: " + std::to_string(plr.stat[1]));
+		printu("Intelligence: " + std::to_string(plr.stat[5]));
+		printu("Defense: " + std::to_string(plr.stat[2]));
+		printu("Agility: " + std::to_string(plr.stat[3]));
+		printu("");
+		printu("Level: " + std::to_string(plr.xp[2]));
+		printu("EXP: " + std::to_string(plr.xp[0]) + "/" + std::to_string(plr.xp[1]));
+	}
 	refresh();
 	post_menu(menu);
 	wrefresh(wmenu);
@@ -378,6 +420,7 @@ int cmenu(int set, std::vector<std::string> text) {
 	//free_menu(menu);
 	clean();
 	//isBattle = false;
+	noi = 0;
 	return(ch);
 }
 
@@ -514,7 +557,7 @@ void plract(int usr) {
 			dam = plr.stat[5];
 			int diff = dam * 20 / 100;
 			dam = (dam-diff) + rand() % (int)((dam+diff)-(dam-diff)+1);
-			if(plr.buff[4] == true)
+			if(plr.buff[intup] == true)
 				//Int buff adds extra 40% to magic attacks
 				dam += (2*diff);
 			now.stat[0] -= dam;
@@ -530,7 +573,7 @@ void plract(int usr) {
 			dam = plr.stat[5];
 			int diff = dam * 20 / 100;
 			dam = (dam-diff) + rand() % (int)((dam+diff)-(dam-diff)+1);
-			if(plr.buff[4] == true)
+			if(plr.buff[intup] == true)
 				//Int buff adds extra 40% to magic attacks
 				dam += (2*diff);
 			now.stat[0] -= dam;
@@ -546,7 +589,7 @@ void plract(int usr) {
 			dam = plr.stat[5];
 			int diff = dam * 20 / 100;
 			dam = (dam-diff) + rand() % (int)((dam+diff)-(dam-diff)+1);
-			if(plr.buff[4] == true)
+			if(plr.buff[intup] == true)
 				//Int buff adds extra 40% to magic attacks
 				dam += (2*diff);
 			now.stat[0] -= dam;
@@ -562,7 +605,7 @@ void plract(int usr) {
 			dam = plr.stat[5];
 			int diff = dam * 20 / 100;
 			dam = (dam-diff) + rand() % (int)((dam+diff)-(dam-diff)+1);
-			if(plr.buff[4] == true)
+			if(plr.buff[intup] == true)
 				//Int buff adds extra 40% to magic attacks
 				dam += (2*diff);
 			now.stat[0] -= dam;
@@ -613,8 +656,8 @@ void plract(int usr) {
 		if(usr == 1) {
 			queue.push_back("You read the book...");
 			queue.push_back("You suddenly feel smarter!");
-			plr.buff[4] = true;
-			plr.times[4] = 3;
+			plr.buff[intup] = true;
+			plr.times[intup] = 3;
 		}
 		//queue.push_back("Not yet implemented!");
 		prompt();
