@@ -29,7 +29,7 @@ int armor;
 //Game variables
 int points, difficulty, classsc, usr, tut_finished;
 //Battle variables
-int agil, dodge, dam, enerand, maxhp;
+int agil, dodge, dam, enerand, maxhp, haspart = 0;
 //Menu variables
 int highlight, n_choices, i, c, ch, t, im;
 int ulines = 0, plines = 0, lines = 0;
@@ -65,7 +65,7 @@ struct ally {
 	int skill[2]; //Has skill, skill level
 	bool buff[10]; //Regen, def up, atk up, agi up, int up, poison, def down, atk down, agi down, int down, paralysis/frozen
 	int times[10]; //Buff timers for regen, def up, atk up, agi up, int up, poison, def down, atk down, agi down, int down, paralysis/frozen
-} part;
+} part, pchen, pprime, pverne;
 
 struct enemy {
 	std::string info[2]; //Name, info
@@ -180,6 +180,7 @@ void prints(std::string);
 void printi(std::string);
 void enemydefeat();
 void mainm();
+void keeppart();
 void save();
 void load();
 void help();

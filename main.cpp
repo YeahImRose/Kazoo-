@@ -144,23 +144,52 @@ void save() {
 
 	std::ofstream file;
 	file.open("savegame");
-	file << plr.name[0] << "\n";
+	file << haspart << ",";
+	file << plr.name[0] << ",";
 	for(i=0;i < 6; i++)
-		file << plr.stat[i] << "\n";
+		file << plr.stat[i] << ",";
 	for(i=0; i < 4; i++)
-		file << plr.xp[i] << "\n";
+		file << plr.xp[i] << ",";
 	for(i=0; i < 8; i++)
-		file << plr.spell[i] << "\n";
+		file << plr.spell[i] << ",";
 
-	if(part.info[0] != "") {
+	if(haspart == 1) {
 		for(i=0; i < 3; i++)
-			file << part.info[i] << "\n";
+			file << part.info[i] << ",";
 		for(i=0;i < 4; i++)
-			file << part.stat[i] << "\n";
+			file << part.stat[i] << ",";
 		for(i=0; i < 4; i++)
-			file << part.xp[i] << "\n";
+			file << part.xp[i] << ",";
 		for(i=0; i < 2; i++)
-			file << part.skill[i] << "\n";
+			file << part.skill[i] << ",";
+	}
+	if(haspart == 0) {
+		for(i=0; i < 3; i++)
+			file << pprime.info[i] << ",";
+		for(i=0;i < 4; i++)
+			file << pprime.stat[i] << ",";
+		for(i=0; i < 4; i++)
+			file << pprime.xp[i] << ",";
+		for(i=0; i < 2; i++)
+			file << pprime.skill[i] << ",";
+
+		for(i=0; i < 3; i++)
+			file << pchen.info[i] << ",";
+		for(i=0;i < 4; i++)
+			file << pchen.stat[i] << ",";
+		for(i=0; i < 4; i++)
+			file << pchen.xp[i] << ",";
+		for(i=0; i < 2; i++)
+			file << pchen.skill[i] << ",";
+
+		for(i=0; i < 3; i++)
+			file << pverne.info[i] << ",";
+		for(i=0;i < 4; i++)
+			file << pverne.stat[i] << ",";
+		for(i=0; i < 4; i++)
+			file << pverne.xp[i] << ",";
+		for(i=0; i < 2; i++)
+			file << pverne.skill[i] << ",";
 	}
 	file.close();
 	queue.resize(0);
@@ -168,7 +197,6 @@ void save() {
 }
 
 void load() {
-	//I'm sorry about this...
 	std::string line;
 	std::ifstream file;
 	file.open("savegame");
@@ -180,10 +208,12 @@ void load() {
 	std::string data[1000];
 	int r = 0;
 	int total = 0;
-	while(getline(file, line)) {
+	while(getline(file, line, ',')) {
 		data[r] = line;
 		r++;
 	}
+	haspart = std::stoi(data[total]);
+	total++;
 	plr.name[0] = data[total];
 	for(i=0;i < 6; i++) {
 		total++;
@@ -194,7 +224,8 @@ void load() {
 	for(i=0; i < 8; i++){
 		total++;
 		plr.spell[i] = std::stoi(data[total]);}
-	if(r > 20) {
+
+	if(haspart == 1) {
 		for(i=0; i < 3; i++){
 			total++;
 			part.info[i] = data[total];}
@@ -207,10 +238,65 @@ void load() {
 		for(i=0; i < 2; i++){
 			total++;
 			part.skill[i] = std::stoi(data[total]);}
-		}
+	}
+	if(haspart == 0) {
+		for(i=0; i < 3; i++){
+			total++;
+			pprime.info[i] = data[total];}
+		for(i=0;i < 4; i++){
+			total++;
+			pprime.stat[i] = std::stoi(data[total]);}
+		for(i=0; i < 4; i++){
+			total++;
+			pprime.xp[i] = std::stoi(data[total]);}
+		for(i=0; i < 2; i++){
+			total++;
+			pprime.skill[i] = std::stoi(data[total]);}
+
+		for(i=0; i < 3; i++){
+			total++;
+			pchen.info[i] = data[total];}
+		for(i=0;i < 4; i++){
+			total++;
+			pchen.stat[i] = std::stoi(data[total]);}
+		for(i=0; i < 4; i++){
+			total++;
+			pchen.xp[i] = std::stoi(data[total]);}
+		for(i=0; i < 2; i++){
+			total++;
+			pchen.skill[i] = std::stoi(data[total]);}
+
+		for(i=0; i < 3; i++){
+			total++;
+			pverne.info[i] = data[total];}
+		for(i=0;i < 4; i++){
+			total++;
+			pverne.stat[i] = std::stoi(data[total]);}
+		for(i=0; i < 4; i++){
+			total++;
+			pverne.xp[i] = std::stoi(data[total]);}
+		for(i=0; i < 2; i++){
+			total++;
+			pverne.skill[i] = std::stoi(data[total]);}
+	}
 	file.close();
 	queue.resize(0);
 	queue.push_back("Game loaded!");
+}
+
+void keeppart() {
+	if(haspart == 1) {
+		//Backup partner stats
+		if(part.info[0] == "Liberty Prime") {
+			pprime = part;
+		}
+		if(part.info[0] == "Chen") {
+			pchen = part;
+		}
+		if(part.info[0] == "Verne") {
+			pverne = part;
+		}
+	}
 }
 
 void mainm() {
@@ -337,16 +423,34 @@ void inv() {
 		plr.times[intup] = 3;
 	}
 	if(usr == 4) {
-		part = prime;
+		keeppart();
+		if(pprime.info[0] != "") {
+			part = pprime;
+		} else {
+			part = prime;
+		}
 		queue.push_back("*THUD* *THUD* *THUD* ... Must defeat Communism...");
+		haspart = 1;
 	}
 	if(usr == 6) {
-		part = chen;
+		keeppart();
+		if(pchen.info[0] != "") {
+			part = pchen;
+		} else {
+			part = chen;
+		}
 		queue.push_back("Out of seemingly nowhere, Chen appears!");
+		haspart = 1;
 	}
 	if(usr == 14) {
-		part = verne;
+		keeppart();
+		if(pchen.info[0] != "") {
+			part = pverne;
+		} else {
+			part = verne;
+		}
 		queue.push_back("Verne global when?");
+		haspart = 1;
 	}
 	//queue.push_back("Not yet implemented!");
 	prompt();
