@@ -32,10 +32,10 @@ int points, difficulty, classsc, usr, tut_finished;
 int agil, dodge, dam, enerand, maxhp;
 //Menu variables
 int highlight, n_choices, i, c, ch, t, im;
-int ulines, lines = 0;
+int ulines = 0, plines = 0, lines = 0;
 int row, col;
 int page = 0; int pages;
-int noi;
+int noi, fmenu;
 //Menu lib variable
 bool scrn = false;
 
@@ -166,19 +166,24 @@ enum colors {
 #endif
 
 int cmenu(int, std::vector<std::string>);
+void uspell();
 void clean();
 void battle();
 void prompt();
 void death();
 void plract(int);
 void enemyact();
+void allyact();
 void printu(std::string);
+void printp(std::string);
 void prints(std::string);
-void printi(std::string, WINDOW);
+void printi(std::string);
 void enemydefeat();
 void mainm();
 void save();
 void load();
+void help();
+void inv();
 void makeitems(int);
 
 #endif /* MAIN_H_ */

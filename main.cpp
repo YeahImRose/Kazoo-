@@ -11,6 +11,7 @@ WINDOW *wmenu;
 WINDOW *wmain;
 WINDOW *info;
 WINDOW *user;
+WINDOW *wpart;
 
 player plr ={{"Player"}, {25, 7, 1, 2, 15, 10}, {0, 20, 1, 10}};
 
@@ -20,7 +21,7 @@ const char *choices[][20] = {
 		{"Attack", "Spells", "Check enemy", "Items", "RUNNN!!!"},
 		{"Firebolt", "Frost", "Bolt", "Quake", "Poison", "Lifesteal", "Heal"},
 		{"Liberty Prime", "Nep-Nep", "Something-something Verne", "Chen"},
-		{"Enable allies", "Delete save", "Back"},
+		{"Delete save", "Back"},
 		{},
 		{},
 		{},
@@ -30,13 +31,13 @@ const char *choices[][20] = {
 		{"   Basic attack", "   Pew pew magic!", "   Display enemy stats and info", "   View/Use items", "   Run away"},
 		{"   An incendiary explosion with a chance to inflict burn", "   An ancient spell from the ice age- chance to inflict freeze", "   A strike of lightning from the sky- chance to inflict paralysis", "   A spell that erupts the ground to pummel the enemy", "   A venomous spell that will probably inflict poison", "   A spell from the vampire underworld that absorbs the enemy's health", "   An angelic spell to restore some of your health"},
 		{"   Throws nukes to defeat communism", "   What do you mean, \"Fourth Wall\"?", "   <Insert lore here>", "   Adorbs"},
-		{"   Enables allies", "   Deletes your save...", "   Return to main menu"},
+		{"   Deletes your save...", "   Return to main menu"},
 		{},
 		{},
 		{},
 		{" ", " "}
 	};
-int c_choices[10] = {5, 4, 5, 7, 4, 3, 0, 0, 0, 2};
+int c_choices[10] = {5, 4, 5, 7, 4, 2, 0, 0, 0, 2};
 
 std::string inventory[][10] = {
 		{"Book", "Another Book", "Random Book", "Liberty Book", "Short Book"},
@@ -56,6 +57,7 @@ void clean() {
 	}
 	lines = 0;
 	ulines = 0;
+	plines = 0;
 }
 
 int main() {
@@ -103,10 +105,43 @@ int main() {
 	prints("This is a alpha build- expect there to be bugs.");
 	prints("Press any key to continue.");
 	getch();
+	pages = 3;
+	endwin();
+	system("clear");
+	text.resize(0);
 	mainm();
 }
 
+void help() {
+	clean();
+	prints("Use the Up/Down arrow keys to navigate menus.");
+	prints("Use the Left/Right arrow keys to switch between menu pages.");
+	prints("Press escape to exit out of some menus(for example, the inventory).");
+	prints("Pressing control + c immediately closes the game.");
+	prints("");
+	prints("Press any key to close this screen");
+	getch();
+	clean();
+	if(fmenu == 0)
+		main();
+	if(fmenu == 1)
+		mainm();
+	if(fmenu == 2)
+		battle();
+	if(fmenu == 3)
+		prompt();
+	if(fmenu == 4)
+		uspell();
+	if(fmenu == 5)
+		inv();
+}
+
 void save() {
+	//Clear save file
+	std::ofstream ofs;
+	ofs.open("savegame", std::ofstream::out | std::ofstream::trunc);
+	ofs.close();
+
 	std::ofstream file;
 	file.open("savegame");
 	file << plr.name[0] << "\n";
@@ -114,13 +149,26 @@ void save() {
 		file << plr.stat[i] << "\n";
 	for(i=0; i < 4; i++)
 		file << plr.xp[i] << "\n";
-	for(i=0; i < 10; i++)
+	for(i=0; i < 8; i++)
 		file << plr.spell[i] << "\n";
+
+	if(part.info[0] != "") {
+		for(i=0; i < 3; i++)
+			file << part.info[i] << "\n";
+		for(i=0;i < 4; i++)
+			file << part.stat[i] << "\n";
+		for(i=0; i < 4; i++)
+			file << part.xp[i] << "\n";
+		for(i=0; i < 2; i++)
+			file << part.skill[i] << "\n";
+	}
 	file.close();
+	queue.resize(0);
 	queue.push_back("Game saved!");
 }
 
 void load() {
+	//I'm sorry about this...
 	std::string line;
 	std::ifstream file;
 	file.open("savegame");
@@ -130,26 +178,82 @@ void load() {
 		mainm();
 	}
 	//Random temp :^ )
-	for(int rt = 0; getline(file, line); rt++) {
-		if(rt == 0)
+	for(int lc = 1; getline(file, line); lc++) {
+		if(lc == 1)
 			plr.name[0] = line;
-		if(rt > 0)
-			if(rt < 5)
-				plr.stat[rt] = std::stoi(line);
-		if (rt > 4)
-			if(rt < 9)
-				plr.xp[rt] = std::stoi(line);
-		if(rt > 9)
-			plr.spell[rt] = std::stoi(line);
+		if(lc == 2)
+			plr.stat[0] = std::stoi(line);
+		if(lc == 3)
+			plr.stat[1] = std::stoi(line);
+		if(lc == 4)
+			plr.stat[2] = std::stoi(line);
+		if(lc == 5)
+			plr.stat[3] = std::stoi(line);
+		if(lc == 6)
+			plr.stat[4] = std::stoi(line);
+		if(lc == 7)
+			plr.stat[5] = std::stoi(line);
+		if(lc == 8)
+			plr.xp[0] = std::stoi(line);
+		if(lc == 9)
+			plr.xp[1] = std::stoi(line);
+		if(lc == 10)
+			plr.xp[2] = std::stoi(line);
+		if(lc == 11)
+			plr.xp[3] = std::stoi(line);
+		if(lc == 12)
+			plr.spell[0] = std::stoi(line);
+		if(lc == 13)
+			plr.spell[1] = std::stoi(line);
+		if(lc == 14)
+			plr.spell[2] = std::stoi(line);
+		if(lc == 15)
+			plr.spell[3] = std::stoi(line);
+		if(lc == 16)
+			plr.spell[4] = std::stoi(line);
+		if(lc == 17)
+			plr.spell[5] = std::stoi(line);
+		if(lc == 18)
+			plr.spell[6] = std::stoi(line);
+		if(lc == 19)
+			plr.spell[7] = std::stoi(line);
+
+		if(lc > 19) {
+			//Ally info begins on line 20
+			if(lc == 20)
+				part.info[0] = line;
+			if(lc == 21)
+				part.info[1] = line;
+			if(lc == 22)
+				part.info[2] = line;
+			if(lc == 23)
+				part.stat[0] = std::stoi(line);
+			if(lc == 24)
+				part.stat[1] = std::stoi(line);
+			if(lc == 25)
+				part.stat[2] = std::stoi(line);
+			if(lc == 26)
+				part.stat[3] = std::stoi(line);
+			if(lc == 27)
+				part.xp[0] = std::stoi(line);
+			if(lc == 28)
+				part.xp[1] = std::stoi(line);
+			if(lc == 29)
+				part.xp[2] = std::stoi(line);
+			if(lc == 30)
+				part.xp[3] = std::stoi(line);
+			if(lc == 31)
+				part.skill[0] = std::stoi(line);
+			if(lc == 32)
+				part.skill[1] = std::stoi(line);
+		}
 	}
 	file.close();
+	queue.resize(0);
 	queue.push_back("Game loaded!");
 }
 
 void mainm() {
-	pages = 3;
-	endwin();
-	system("clear");
 	text.resize(0);
 	text.push_back("Select a thing:");
 	usr = cmenu(0, text);
@@ -166,6 +270,7 @@ void mainm() {
 		mainm();
 	}
 	if(usr == 4) {
+		text.resize(0);
 		text.push_back("Not implemented yet!");
 		mainm();
 	}
@@ -208,6 +313,7 @@ void battle() {
 	}
 	if(usr == 4) {
 		clean();
+		text.resize(0);
 		mainm();
 	}
 }
@@ -222,13 +328,23 @@ void printu(std::string text) {
 	refresh();
 	wrefresh(user);
 }
+void printp(std::string text) {
+	move(plines+2, (col * 3 / 5) + 1);
+	printw(text.c_str());
+	++plines;
+	wrefresh(stdscr);
+	refresh();
+	wborder(wpart, 1, 1, 1, 1, 0, 0, 0, 0);
+	refresh();
+	wrefresh(wpart);
+}
 void prints(std::string text) {
 	mvwprintw(stdscr, lines + 1, 1, text.c_str());
 	++lines;
 	refresh();
 	wrefresh(stdscr);
 }
-void printi(std::string text, WINDOW *info) {
+void printi(std::string text) {
 	mvwprintw(stdscr, lines + 1, 1, text.c_str());
 	++lines;
 	refresh();
@@ -246,6 +362,35 @@ void makeitems(int set) {
 	cmenu(set, text);
 }
 
+void inv() {
+	if(page == 0) {
+		mvprintw(15, 20, "--->");
+	} else if(page == pages) {
+		mvprintw(15, 3, "<---");
+	} else {
+		mvprintw(15, 3, "<---             --->");
+	}
+	refresh();
+	text.resize(0);
+	text.push_back("Select item:");
+	int usr = cmenu(100, text);
+	if(usr == -1) {
+		prompt();
+	}
+	if(usr == 1) {
+		queue.push_back("You read the book...");
+		queue.push_back("You suddenly feel smarter!");
+		plr.buff[intup] = true;
+		plr.times[intup] = 3;
+	}
+	if(usr == 6) {
+		part = chen;
+		queue.push_back("Out of seemingly nowhere, a honking Chen appears!");
+	}
+	//queue.push_back("Not yet implemented!");
+	prompt();
+}
+
 int cmenu(int set, std::vector<std::string> text) {
 	clean();
 	highlight = 1;
@@ -260,10 +405,10 @@ int cmenu(int set, std::vector<std::string> text) {
 		refresh();
 	}
 
-	//WINDOW *wmain = newwin(0, 0, 0, 0);
 	WINDOW *wmenu = newwin(7, 100, 11, 0);
 	WINDOW *info = newwin(8, 70, 0, 0);
 	WINDOW *user = newwin(11, 25, 1, (col * 4 / 5));
+	WINDOW *wpart = newwin(10, 25, 1, (col * 3 / 5));
 
 	//Isn't inventory call
 	if(set != 100) {
@@ -277,6 +422,7 @@ int cmenu(int set, std::vector<std::string> text) {
 
 	//Is inventory call
 	if(set == 100) {
+		fmenu = 5;
 		n_choices = 5;
 		items = (ITEM **)calloc(n_choices + 1, sizeof(ITEM *));
 		for(i = 0; i < n_choices; ++i)
@@ -284,7 +430,14 @@ int cmenu(int set, std::vector<std::string> text) {
 		items[n_choices] = (ITEM *)NULL;
 		menu = new_menu((ITEM **)items);
 	}
-
+	if(set == 0)
+		fmenu = 1;
+	if(set == 1)
+		fmenu = 2;
+	if(set == 2)
+		fmenu = 3;
+	if(set == 3)
+		fmenu = 4;
 	set_menu_win(menu, wmenu);
 	set_menu_sub(menu, derwin(wmenu, 5, 70, 5, 0));
 	set_menu_mark(menu, " > ");
@@ -303,6 +456,19 @@ int cmenu(int set, std::vector<std::string> text) {
 		std::string str = queue[i];
 		prints(str);
 	}
+	if(part.info[0] != "") {
+		wborder(wpart, 0, 0, 0, 0, 0, 0, 0, 0);
+		wrefresh(wpart);
+		mvprintw(0, col * 3 / 5, (part.info[0] + ":").c_str());
+		printp("HP: " + std::to_string(part.stat[0]));
+		printp("Attack: " + std::to_string(part.stat[1]));
+		printp("Defense: " + std::to_string(part.stat[2]));
+		printp("Agility: " + std::to_string(part.stat[3]));
+		printp("");
+		printp("Level: " + std::to_string(part.xp[2]));
+		printp("EXP: " + std::to_string(part.xp[0]) + "/" + std::to_string(part.xp[1]));
+		refresh();
+	}
 	if(noi == 0) {
 		mvprintw(0, col * 4 / 5, (plr.name[0] + ":").c_str());
 		printu("HP: " + std::to_string(plr.stat[0]));
@@ -318,8 +484,10 @@ int cmenu(int set, std::vector<std::string> text) {
 	refresh();
 	post_menu(menu);
 	wrefresh(wmenu);
+	set_escdelay(25);
 	move(11, 0);
 	mvprintw(28, 1, "%d, %d", (highlight + (page*5)), page);
+	mvprintw(28, 100, "Press \"?\" for help");
 	refresh();
 
 	while((c = getch())){
@@ -367,12 +535,22 @@ int cmenu(int set, std::vector<std::string> text) {
 				makeitems(100);
 				}
 				break;
+			//If user presses escape key in the menu
+			case 27:
+				if(set == 100)
+					ch = -1;
+					break;
+				break;
 			//If user presses enter key
 			case 10:
-				page = 0;
 				ch = highlight;
 				if(set==100)
 					ch = highlight + (page*5);
+				page = 0;
+				break;
+			//User presses "?" key
+			case 63:
+				help();
 				break;
 			//If user presses control key
 			case BUTTON_CTRL:
@@ -479,8 +657,35 @@ void enemydefeat() {
 
 	int diff = maxhp * 20 / 100;
 	int xp = maxhp + diff;
-	queue.push_back("You gained " + std::to_string(xp) + " xp!");
 
+	if(part.info[0] != "") {
+		queue.push_back(part.info[0] + " gained " + std::to_string(xp) + " xp!");
+		//Get value of excess xp
+		if(xp + part.xp[0] >= part.xp[1]) {
+			//Set xp equal to gained xp + current xp - needed xp (e.g- at level one, needed xp is 20: have 12xp, gain 12xp, subtract 20 = 4 left over)
+			xp += part.xp[0] - part.xp[1];
+
+			//Add a level
+			part.xp[2]++;
+			queue.push_back(part.info[0] + " leveled up!");
+
+			//Handling decimal values
+			double temp = part.xp[2] / 2;
+			part.xp[1] = 35 * temp;
+			part.xp[0] = xp;
+
+			//Player stat changes will go here
+
+
+		//Gained xp wasn't enough to level up
+		} else if(xp + part.xp[0] < part.xp[1]) {
+			part.xp[0] += xp;
+		}
+	}
+
+	diff = maxhp * 20 / 100;
+	xp = maxhp + diff;
+	queue.push_back("You gained " + std::to_string(xp) + " xp!");
 	//Get value of excess xp
 	if(xp + plr.xp[0] >= plr.xp[1]) {
 		//Set xp equal to gained xp + current xp - needed xp (e.g- at level one, needed xp is 20: have 12xp, gain 12xp, subtract 20 = 4 left over)
@@ -509,7 +714,7 @@ void enemydefeat() {
 	wrefresh(info);
 	for(i=0; i < queue.size(); i++) {
 		std::string str = queue[i];
-		printi(str, info);
+		printi(str);
 	}
 	getch();
 	queue.clear();
@@ -549,96 +754,7 @@ void plract(int usr) {
 	}
 	//Spells
 	if(usr == 2) {
-		text.push_back("Select spell:");
-		usr = cmenu(3, text);
-		int didSpell = 0;
-		if(usr == 1 && plr.spell[0] == 1) {
-			//Deals damage of random amount either 20% -/+ or equal to damage
-			dam = plr.stat[5];
-			int diff = dam * 20 / 100;
-			dam = (dam-diff) + rand() % (int)((dam+diff)-(dam-diff)+1);
-			if(plr.buff[intup] == true)
-				//Int buff adds extra 40% to magic attacks
-				dam += (2*diff);
-			now.stat[0] -= dam;
-			tempstr = "You dealt " + std::to_string(dam) + " to the " + now.info[0] + "!";
-			queue.push_back("You dealt " + std::to_string(dam) + " to the " + now.info[0] + "!");
-			didSpell = 1;
-		} else if(usr == 1) {
-			queue.push_back("You don't have that spell!");
-		}
-
-		if(usr == 2 && plr.spell[1] == 1) {
-			//Deals damage of random amount either 20% -/+ or equal to damage
-			dam = plr.stat[5];
-			int diff = dam * 20 / 100;
-			dam = (dam-diff) + rand() % (int)((dam+diff)-(dam-diff)+1);
-			if(plr.buff[intup] == true)
-				//Int buff adds extra 40% to magic attacks
-				dam += (2*diff);
-			now.stat[0] -= dam;
-			tempstr = "You dealt " + std::to_string(dam) + " to the " + now.info[0] + "!";
-			queue.push_back("You dealt " + std::to_string(dam) + " to the " + now.info[0] + "!");
-			didSpell = 1;
-		} else if(usr == 2)  {
-			queue.push_back("You don't have that spell!");
-		}
-
-		if(usr == 3 && plr.spell[2] == 1) {
-			//Deals damage of random amount either 20% -/+ or equal to damage
-			dam = plr.stat[5];
-			int diff = dam * 20 / 100;
-			dam = (dam-diff) + rand() % (int)((dam+diff)-(dam-diff)+1);
-			if(plr.buff[intup] == true)
-				//Int buff adds extra 40% to magic attacks
-				dam += (2*diff);
-			now.stat[0] -= dam;
-			tempstr = "You dealt " + std::to_string(dam) + " to the " + now.info[0] + "!";
-			queue.push_back("You dealt " + std::to_string(dam) + " to the " + now.info[0] + "!");
-			didSpell = 1;
-		} else if(usr == 3) {
-			queue.push_back("You don't have that spell!");
-		}
-
-		if(usr == 4 && plr.spell[3] == 1) {
-			//Deals damage of random amount either 20% -/+ or equal to damage
-			dam = plr.stat[5];
-			int diff = dam * 20 / 100;
-			dam = (dam-diff) + rand() % (int)((dam+diff)-(dam-diff)+1);
-			if(plr.buff[intup] == true)
-				//Int buff adds extra 40% to magic attacks
-				dam += (2*diff);
-			now.stat[0] -= dam;
-			tempstr = "You dealt " + std::to_string(dam) + " to the " + now.info[0] + "!";
-			queue.push_back("You dealt " + std::to_string(dam) + " to the " + now.info[0] + "!");
-			didSpell = 1;
-		} else if(usr == 4) {
-			queue.push_back("You don't have that spell!");
-		}
-
-		if(usr == 5 && plr.spell[4] == 1) {
-		} else if(usr == 5) {
-			queue.push_back("You don't have that spell!");
-		}
-
-		if(usr == 6 && plr.spell[5] == 1) {
-		} else if(usr == 6) {
-			queue.push_back("You don't have that spell!");
-		}
-
-		if(usr == 7 && plr.spell[6] == 1) {
-		} else if(usr == 7) {
-			queue.push_back("You don't have that spell!");
-		}
-
-		if(now.stat[0] < 1) {
-			enemydefeat();
-		} else {
-			if(didSpell == 1)
-				enemyact();
-			else
-				prompt();
-		}
+		uspell();
 	}
 	//Check enemy
 	if(usr == 3) {
@@ -650,17 +766,7 @@ void plract(int usr) {
 	}
 	//Items
 	if(usr == 4) {
-		text.resize(0);
-		text.push_back("Select item:");
-		int usr = cmenu(100, text);
-		if(usr == 1) {
-			queue.push_back("You read the book...");
-			queue.push_back("You suddenly feel smarter!");
-			plr.buff[intup] = true;
-			plr.times[intup] = 3;
-		}
-		//queue.push_back("Not yet implemented!");
-		prompt();
+		inv();
 	}
 	//Run!
 	if(usr == 5) {
@@ -668,6 +774,104 @@ void plract(int usr) {
 		queue.push_back("Not yet implemented!");
 		prompt();
 	}
+}
+
+void allyact() {
+
+}
+
+void uspell() {
+	text.push_back("Select spell:");
+	usr = cmenu(3, text);
+	int didSpell = 0;
+	if(usr == 1 && plr.spell[0] == 1) {
+		//Deals damage of random amount either 20% -/+ or equal to damage
+		dam = plr.stat[5];
+		int diff = dam * 20 / 100;
+		dam = (dam-diff) + rand() % (int)((dam+diff)-(dam-diff)+1);
+		if(plr.buff[intup] == true)
+			//Int buff adds extra 40% to magic attacks
+			dam += (2*diff);
+		now.stat[0] -= dam;
+		tempstr = "You dealt " + std::to_string(dam) + " to the " + now.info[0] + "!";
+		queue.push_back("You dealt " + std::to_string(dam) + " to the " + now.info[0] + "!");
+		didSpell = 1;
+	} else if(usr == 1) {
+		queue.push_back("You don't have that spell!");
+	}
+
+	if(usr == 2 && plr.spell[1] == 1) {
+		//Deals damage of random amount either 20% -/+ or equal to damage
+		dam = plr.stat[5];
+		int diff = dam * 20 / 100;
+		dam = (dam-diff) + rand() % (int)((dam+diff)-(dam-diff)+1);
+		if(plr.buff[intup] == true)
+			//Int buff adds extra 40% to magic attacks
+			dam += (2*diff);
+		now.stat[0] -= dam;
+		tempstr = "You dealt " + std::to_string(dam) + " to the " + now.info[0] + "!";
+		queue.push_back("You dealt " + std::to_string(dam) + " to the " + now.info[0] + "!");
+		didSpell = 1;
+	} else if(usr == 2)  {
+		queue.push_back("You don't have that spell!");
+	}
+
+	if(usr == 3 && plr.spell[2] == 1) {
+		//Deals damage of random amount either 20% -/+ or equal to damage
+		dam = plr.stat[5];
+		int diff = dam * 20 / 100;
+		dam = (dam-diff) + rand() % (int)((dam+diff)-(dam-diff)+1);
+		if(plr.buff[intup] == true)
+			//Int buff adds extra 40% to magic attacks
+			dam += (2*diff);
+		now.stat[0] -= dam;
+		tempstr = "You dealt " + std::to_string(dam) + " to the " + now.info[0] + "!";
+		queue.push_back("You dealt " + std::to_string(dam) + " to the " + now.info[0] + "!");
+		didSpell = 1;
+	} else if(usr == 3) {
+		queue.push_back("You don't have that spell!");
+	}
+
+	if(usr == 4 && plr.spell[3] == 1) {
+		//Deals damage of random amount either 20% -/+ or equal to damage
+		dam = plr.stat[5];
+		int diff = dam * 20 / 100;
+		dam = (dam-diff) + rand() % (int)((dam+diff)-(dam-diff)+1);
+		if(plr.buff[intup] == true)
+			//Int buff adds extra 40% to magic attacks
+			dam += (2*diff);
+		now.stat[0] -= dam;
+		tempstr = "You dealt " + std::to_string(dam) + " to the " + now.info[0] + "!";
+		queue.push_back("You dealt " + std::to_string(dam) + " to the " + now.info[0] + "!");
+		didSpell = 1;
+	} else if(usr == 4) {
+		queue.push_back("You don't have that spell!");
+	}
+
+	if(usr == 5 && plr.spell[4] == 1) {
+	} else if(usr == 5) {
+		queue.push_back("You don't have that spell!");
+	}
+
+	if(usr == 6 && plr.spell[5] == 1) {
+	} else if(usr == 6) {
+		queue.push_back("You don't have that spell!");
+	}
+
+	if(usr == 7 && plr.spell[6] == 1) {
+	} else if(usr == 7) {
+		queue.push_back("You don't have that spell!");
+	}
+
+	if(now.stat[0] < 1) {
+		enemydefeat();
+	} else {
+		if(didSpell == 1)
+			enemyact();
+		else
+			prompt();
+}
+
 }
 
 void death() {
