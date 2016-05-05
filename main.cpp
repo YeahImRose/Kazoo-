@@ -22,7 +22,7 @@ const char *choices[][20] = {
 		{"Firebolt", "Frost", "Bolt", "Quake", "Poison", "Lifesteal", "Heal"},
 		{"Liberty Prime", "Nep-Nep", "Something-something Verne", "Chen"},
 		{"Delete save", "Back"},
-		{},
+		{"Attack", "Skills"},
 		{},
 		{},
 		{"Yes", "No"},
@@ -32,22 +32,22 @@ const char *choices[][20] = {
 		{"   An incendiary explosion with a chance to inflict burn", "   An ancient spell from the ice age- chance to inflict freeze", "   A strike of lightning from the sky- chance to inflict paralysis", "   A spell that erupts the ground to pummel the enemy", "   A venomous spell that will probably inflict poison", "   A spell from the vampire underworld that absorbs the enemy's health", "   An angelic spell to restore some of your health"},
 		{"   Throws nukes to defeat communism", "   What do you mean, \"Fourth Wall\"?", "   <Insert lore here>", "   Adorbs"},
 		{"   Deletes your save...", "   Return to main menu"},
-		{},
+		{"   Basic attack", "   Ally's skills"},
 		{},
 		{},
 		{" ", " "}
 	};
-int c_choices[10] = {5, 4, 5, 7, 4, 2, 0, 0, 0, 2};
+int c_choices[10] = {5, 4, 5, 7, 4, 2, 2, 0, 0, 2};
 
 std::string inventory[][10] = {
 		{"Book", "Another Book", "Random Book", "Liberty Book", "Short Book"},
 		{"Honking Book", "MLG Book", "Fab Book", "Debug Book", "Kappa Book"},
-		{"Book Book", "Histoire's Tome/Book", "Imaginary Book", "Trippy Book", "THE BOOK"},
+		{"Book Book", "Histoire's Tome/Book", "Imaginary Book", "Frozen Book", "THE BOOK"},
 		{"Picture Book", "Coloring Book", "Hardcover Book", "Mak Book", "Biilbe"},
 		{},
 		{"   A simple book", "   Another simple book", "   You don't know where this came from", "   The cover shows an eagle flying over thousands of tanks", "   It's just a piece of paper"},
 		{"   A mysterious honking is always emitted from this book", "   A book that is 2 1337 4 u", "   The fab levels of this book are beyond comprehension", "   A book that kills bugs- a programmers dream", "   A book full of the greatest memes in history"},
-		{"   A book-ish book", "   How did this get here?", "   The book you wanted to write but couldn't be bothered to", "   Now with 420 pages!", "   The only book"},
+		{"   A book-ish book", "   How did this get here?", "   The book you wanted to write but couldn't be bothered to", "   Might do something special!", "   The only book"},
 		{"   A book for young childrens", "   A book for da colors", "   Might hurt if you hit yourself with it", "   A non-copyrighted book", "   A famous religious book"}
 };
 
@@ -177,77 +177,37 @@ void load() {
 		perror("Error open");
 		mainm();
 	}
-	//Random temp :^ )
-	for(int lc = 1; getline(file, line); lc++) {
-		if(lc == 1)
-			plr.name[0] = line;
-		if(lc == 2)
-			plr.stat[0] = std::stoi(line);
-		if(lc == 3)
-			plr.stat[1] = std::stoi(line);
-		if(lc == 4)
-			plr.stat[2] = std::stoi(line);
-		if(lc == 5)
-			plr.stat[3] = std::stoi(line);
-		if(lc == 6)
-			plr.stat[4] = std::stoi(line);
-		if(lc == 7)
-			plr.stat[5] = std::stoi(line);
-		if(lc == 8)
-			plr.xp[0] = std::stoi(line);
-		if(lc == 9)
-			plr.xp[1] = std::stoi(line);
-		if(lc == 10)
-			plr.xp[2] = std::stoi(line);
-		if(lc == 11)
-			plr.xp[3] = std::stoi(line);
-		if(lc == 12)
-			plr.spell[0] = std::stoi(line);
-		if(lc == 13)
-			plr.spell[1] = std::stoi(line);
-		if(lc == 14)
-			plr.spell[2] = std::stoi(line);
-		if(lc == 15)
-			plr.spell[3] = std::stoi(line);
-		if(lc == 16)
-			plr.spell[4] = std::stoi(line);
-		if(lc == 17)
-			plr.spell[5] = std::stoi(line);
-		if(lc == 18)
-			plr.spell[6] = std::stoi(line);
-		if(lc == 19)
-			plr.spell[7] = std::stoi(line);
-
-		if(lc > 19) {
-			//Ally info begins on line 20
-			if(lc == 20)
-				part.info[0] = line;
-			if(lc == 21)
-				part.info[1] = line;
-			if(lc == 22)
-				part.info[2] = line;
-			if(lc == 23)
-				part.stat[0] = std::stoi(line);
-			if(lc == 24)
-				part.stat[1] = std::stoi(line);
-			if(lc == 25)
-				part.stat[2] = std::stoi(line);
-			if(lc == 26)
-				part.stat[3] = std::stoi(line);
-			if(lc == 27)
-				part.xp[0] = std::stoi(line);
-			if(lc == 28)
-				part.xp[1] = std::stoi(line);
-			if(lc == 29)
-				part.xp[2] = std::stoi(line);
-			if(lc == 30)
-				part.xp[3] = std::stoi(line);
-			if(lc == 31)
-				part.skill[0] = std::stoi(line);
-			if(lc == 32)
-				part.skill[1] = std::stoi(line);
-		}
+	std::string data[1000];
+	int r = 0;
+	int total = 0;
+	while(getline(file, line)) {
+		data[r] = line;
+		r++;
 	}
+	plr.name[0] = data[total];
+	for(i=0;i < 6; i++) {
+		total++;
+		plr.stat[i] = std::stoi(data[total]); }
+	for(i=0; i < 4; i++) {
+		total++;
+		plr.xp[i] = std::stoi(data[total]); }
+	for(i=0; i < 8; i++){
+		total++;
+		plr.spell[i] = std::stoi(data[total]);}
+	if(r > 20) {
+		for(i=0; i < 3; i++){
+			total++;
+			part.info[i] = data[total];}
+		for(i=0;i < 4; i++){
+			total++;
+			part.stat[i] = std::stoi(data[total]);}
+		for(i=0; i < 4; i++){
+			total++;
+			part.xp[i] = std::stoi(data[total]);}
+		for(i=0; i < 2; i++){
+			total++;
+			part.skill[i] = std::stoi(data[total]);}
+		}
 	file.close();
 	queue.resize(0);
 	queue.push_back("Game loaded!");
@@ -363,13 +323,6 @@ void makeitems(int set) {
 }
 
 void inv() {
-	if(page == 0) {
-		mvprintw(15, 20, "--->");
-	} else if(page == pages) {
-		mvprintw(15, 3, "<---");
-	} else {
-		mvprintw(15, 3, "<---             --->");
-	}
 	refresh();
 	text.resize(0);
 	text.push_back("Select item:");
@@ -383,9 +336,17 @@ void inv() {
 		plr.buff[intup] = true;
 		plr.times[intup] = 3;
 	}
+	if(usr == 4) {
+		part = prime;
+		queue.push_back("*THUD* *THUD* *THUD* ... Must defeat Communism...");
+	}
 	if(usr == 6) {
 		part = chen;
-		queue.push_back("Out of seemingly nowhere, a honking Chen appears!");
+		queue.push_back("Out of seemingly nowhere, Chen appears!");
+	}
+	if(usr == 14) {
+		part = verne;
+		queue.push_back("Verne global when?");
 	}
 	//queue.push_back("Not yet implemented!");
 	prompt();
@@ -488,6 +449,19 @@ int cmenu(int set, std::vector<std::string> text) {
 	move(11, 0);
 	mvprintw(28, 1, "%d, %d", (highlight + (page*5)), page);
 	mvprintw(28, 100, "Press \"?\" for help");
+	if(set == 100) {
+		if(page == 0) {
+			mvprintw(9, 20, "--->");
+			refresh();
+		} else if(page == pages) {
+			mvprintw(9, 3, "<---");
+			refresh();
+		} else {
+			mvprintw(9, 3, "<---             --->");
+			refresh();
+		}
+	}
+	move(11, 0);
 	refresh();
 
 	while((c = getch())){
@@ -749,7 +723,11 @@ void plract(int usr) {
 		if(now.stat[0] < 1) {
 			enemydefeat();
 		} else {
-			enemyact();
+			if(part.info[0] != "") {
+				allyact();
+			} else {
+				enemyact();
+			}
 		}
 	}
 	//Spells
@@ -777,7 +755,45 @@ void plract(int usr) {
 }
 
 void allyact() {
+	dam = part.stat[1];
+	int diff = dam * 20 / 100;
+	dam = (dam-diff) + rand() % (int)((dam+diff)-(dam-diff)+1);
+	text.resize(0);
+	text.push_back("Select ally action");
+	usr = cmenu(6, text);
+	if(usr == 1) {
+		//Deals damage of random amount either 20% -/+ or equal to damage
+		agil = now.stat[3];
+		dodge = agil + rand() % (int)(10 - agil + 1);
 
+		//Enemy dodged
+		if(dodge == 10) {
+			queue.push_back("The " + now.info[0] + " dodged your ally's attack!");
+
+		//Enemy didn't dodge
+		} else if(dodge != 10) {
+			//Reduce damage by enemy defense, but keep above 0
+			dam = std::max(-1, dam-now.stat[2]);
+			now.stat[0] -= dam;
+			clean();
+			if(dam >= 1) {
+				tempstr = part.info[0] + " dealt " + std::to_string(dam) + " to the " + now.info[0] + "!";
+				queue.push_back(part.info[0] + " " + std::to_string(dam) + " damage to the " + now.info[0] + "!");
+			} else {
+				queue.push_back(part.info[0] + "\'s attack did no damage!");
+			}
+		}
+
+		if(now.stat[0] < 1) {
+			enemydefeat();
+		} else {
+			enemyact();
+		}
+	}
+	if(usr == 2) {
+		queue.push_back("Not implemented yet");
+		allyact();
+	}
 }
 
 void uspell() {
@@ -866,10 +882,15 @@ void uspell() {
 	if(now.stat[0] < 1) {
 		enemydefeat();
 	} else {
-		if(didSpell == 1)
-			enemyact();
-		else
+		if(didSpell == 1) {
+			if(part.info[0] != "") {
+				allyact();
+			} else {
+				enemyact();
+			}
+		} else {
 			prompt();
+		}
 }
 
 }
