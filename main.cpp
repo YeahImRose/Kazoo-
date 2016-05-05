@@ -162,8 +162,7 @@ void save() {
 			file << part.xp[i] << ",";
 		for(i=0; i < 2; i++)
 			file << part.skill[i] << ",";
-	}
-	if(haspart == 0) {
+
 		for(i=0; i < 3; i++)
 			file << pprime.info[i] << ",";
 		for(i=0;i < 4; i++)
@@ -444,7 +443,7 @@ void inv() {
 	}
 	if(usr == 14) {
 		keeppart();
-		if(pchen.info[0] != "") {
+		if(pverne.info[0] != "") {
 			part = pverne;
 		} else {
 			part = verne;
