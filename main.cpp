@@ -8,7 +8,6 @@
 MENU *menu;
 ITEM **items;
 WINDOW *wmenu;
-WINDOW *wmain;
 WINDOW *info;
 WINDOW *user;
 WINDOW *wpart;
@@ -52,6 +51,7 @@ std::string inventory[][10] = {
 };
 
 void clean() {
+	//TO-DO: figure out a better alternative to this
 	if(scrn==true) {
 		erase();
 	}
@@ -88,6 +88,9 @@ int main() {
 		system("clear");
 		move(1, 0);
 		endwin();
+		pprime = prime;
+		pchen = chen;
+		pverne = verne;
 		cout << "What is your name?(Max 16 characters)\n";
 		getline(cin, plr.name[0]);
 		if(plr.name[0] == "llama")
@@ -118,6 +121,7 @@ void help() {
 	prints("Use the Left/Right arrow keys to switch between menu pages.");
 	prints("Press escape to exit out of some menus(for example, the inventory).");
 	prints("Pressing control + c immediately closes the game.");
+	prints("Pressing shift + s saves the game.");
 	prints("");
 	prints("Press any key to close this screen");
 	getch();
@@ -191,8 +195,7 @@ void save() {
 			file << pverne.skill[i] << ",";
 	}
 	file.close();
-	queue.resize(0);
-	queue.push_back("Game saved!");
+	prints("Game saved!");
 }
 
 void load() {
@@ -237,8 +240,7 @@ void load() {
 		for(i=0; i < 2; i++){
 			total++;
 			part.skill[i] = std::stoi(data[total]);}
-	}
-	if(haspart == 0) {
+
 		for(i=0; i < 3; i++){
 			total++;
 			pprime.info[i] = data[total];}
@@ -284,17 +286,15 @@ void load() {
 }
 
 void keeppart() {
-	if(haspart == 1) {
-		//Backup partner stats
-		if(part.info[0] == "Liberty Prime") {
-			pprime = part;
-		}
-		if(part.info[0] == "Chen") {
-			pchen = part;
-		}
-		if(part.info[0] == "Verne") {
-			pverne = part;
-		}
+	//Backup partner stats
+	if(part.info[0] == "Liberty Prime") {
+		pprime = part;
+	}
+	if(part.info[0] == "Chen") {
+		pchen = part;
+	}
+	if(part.info[0] == "Verne") {
+		pverne = part;
 	}
 }
 
@@ -506,7 +506,7 @@ int cmenu(int set, std::vector<std::string> text) {
 	set_menu_sub(menu, derwin(wmenu, 5, 70, 5, 0));
 	set_menu_mark(menu, " > ");
 
-	wclear(stdscr);
+	werase(stdscr);
 	wborder(info, 0, 0, 0, 0, 0, 0, 0, 0);
 	wborder(user, 0, 0, 0, 0, 0, 0, 0, 0);
 	refresh();
@@ -629,17 +629,19 @@ int cmenu(int set, std::vector<std::string> text) {
 			case 63:
 				help();
 				break;
+			case 83:
+				save();
+				break;
 			//If user presses control key
 			case BUTTON_CTRL:
 				//This is beautiful, works like a charm :)
 				while((t = getch())) {
 					switch(t) {
-						case 'c':
+						case 99:
 							system("clear");
 							free_menu(menu);
 							clean();
 							delwin(wmenu);
-							delwin(wmain);
 							endwin();
 							exit(EXIT_SUCCESS);
 							break;

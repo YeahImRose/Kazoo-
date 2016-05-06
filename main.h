@@ -183,6 +183,7 @@ void mainm();
 void keeppart();
 void save();
 void load();
+void resize();
 void help();
 void inv();
 void makeitems(int);
