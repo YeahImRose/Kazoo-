@@ -114,7 +114,7 @@ enum spellEnum {
 
 //Setting colors for different OS's
 #ifdef _WIN32
-#error "UNSPPORTED SYTEM!"
+#error "UNSPPORTED SYSTEM!"
 #elif __APPLE__
 enum colors {
 	black=0,
