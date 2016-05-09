@@ -8,7 +8,7 @@
 enemy wolf = {{ "wolf", "fodder " }, {15, 3, 2, 1}};
 enemy slime = {{"slime", "*boing*'ing "}, {10, 2, 3, 1}};
 
-enemy bigslime = {{"giant slime", "*BOING BOING*"}, {50, 5, 5, 2}};
+enemy bigslime = {{"giant slime", "*BOING BOING*'ing"}, {50, 5, 5, 2}};
 
 
 #endif /* ENEMIES_H_ */

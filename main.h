@@ -38,6 +38,7 @@ int page = 0; int pages;
 int noi, fmenu;
 //Menu lib variable
 bool scrn = false;
+int xpos, ypos;
 
 std::string triggers[25];
 /*std::string yes_words [] = {"yes", "y", "true", "indeed", "yeah", "afirmative"};
@@ -47,11 +48,12 @@ std::string take_words [] = {"take", "grab", "pick", "get", "aquire", "nab", "st
 std::string use_words[] = {"use", "eat", "read", "drink", "flip", "turn", "hit"};*/
 std::string kills[100];
 std::string tempstr;
+std::string lastdir;
 std::vector<std::string> text, queue;
 
 struct player {
 	std::string name[1];
-	int stat[6]; //HP, attack, defense, agility, mana, intelligence
+	int stat[7]; //Max HP, current HP, attack, defense, agility, mana, intelligence
 	int xp[4]; //Current xp, xp needed for next level, current level, max level
 	int spell[16]; //0-7= Has: firebolt, frost, poison, lifesteal, bolt, quake, heal, stun/ 8-15=respective spell levels
 	bool buff[10]; //Regen, def up, atk up, agi up, int up, poison, def down, atk down, agi down, int down, paralysis/frozen
@@ -187,5 +189,6 @@ void resize();
 void help();
 void inv();
 void makeitems(int);
+void map();
 
 #endif /* MAIN_H_ */

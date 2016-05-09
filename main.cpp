@@ -12,10 +12,12 @@ WINDOW *info;
 WINDOW *user;
 WINDOW *wpart;
 
+std::string test;
+int c_choices[10] = {6, 4, 5, 7, 4, 2, 2, 0, 0, 2};
 player plr ={{"Player"}, {25, 7, 1, 2, 15, 10}, {0, 20, 1, 10}};
 
 const char *choices[][20] = {
-		{"Test battle", "Save", "Load", "Options", "Exit"},
+		{"Test battle", "Save", "Load", "Options", "Exit", "Test map"},
 		{"Training dummy", "Fodder enemy", "Test boss", "Back"},
 		{"Attack", "Spells", "Check enemy", "Items", "RUNNN!!!"},
 		{"Firebolt", "Frost", "Bolt", "Quake", "Poison", "Lifesteal", "Heal"},
@@ -25,7 +27,7 @@ const char *choices[][20] = {
 		{},
 		{},
 		{"Yes", "No"},
-		{"   Initiates debug battle", "   Save game", "   Load game", "   Open options menu", "   Closes the game"},
+		{"   Initiates debug battle", "   Save game", "   Load game", "   Open options menu", "   Closes the game", "Enters debug map mode"},
 		{"   Not implemented", "   Could be a bit stronger", "   Not implemented", "   Return to main menu"},
 		{"   Basic attack", "   Pew pew magic!", "   Display enemy stats and info", "   View/Use items", "   Run away"},
 		{"   An incendiary explosion with a chance to inflict burn", "   An ancient spell from the ice age- chance to inflict freeze", "   A strike of lightning from the sky- chance to inflict paralysis", "   A spell that erupts the ground to pummel the enemy", "   A venomous spell that will probably inflict poison", "   A spell from the vampire underworld that absorbs the enemy's health", "   An angelic spell to restore some of your health"},
@@ -36,9 +38,8 @@ const char *choices[][20] = {
 		{},
 		{" ", " "}
 	};
-int c_choices[10] = {5, 4, 5, 7, 4, 2, 2, 0, 0, 2};
 
-std::string inventory[][10] = {
+std::string inventory[][5] = {
 		{"Book", "Another Book", "Random Book", "Liberty Book", "Short Book"},
 		{"Honking Book", "MLG Book", "Fab Book", "Debug Book", "Kappa Book"},
 		{"Book Book", "Histoire's Tome/Book", "Imaginary Book", "Frozen Book", "THE BOOK"},
@@ -48,6 +49,20 @@ std::string inventory[][10] = {
 		{"   A mysterious honking is always emitted from this book", "   A book that is 2 1337 4 u", "   The fab levels of this book are beyond comprehension", "   A book that kills bugs- a programmers dream", "   A book full of the greatest memes in history"},
 		{"   A book-ish book", "   How did this get here?", "   The book you wanted to write but couldn't be bothered to", "   Might do something special!", "   The only book"},
 		{"   A book for young childrens", "   A book for da colors", "   Might hurt if you hit yourself with it", "   A non-copyrighted book", "   A famous religious book"}
+};
+
+std::string mapa[10][10] = {
+		//North /\, south \/, east <, west >
+		{"", "", 							"",							"",							"", "", "", "", "", ""},
+		{"", "You are in a cave", 			"",							"",							"", "", "", "", "", ""},
+		{"", "Still in a cave",				"Woah, there's more cave?",	"",							"", "", "", "", "", ""},
+		{"", "",							"Still more cave", 			"",							"", "", "", "", "", ""},
+		{"", "Maybe less cave soon?",		"Continued cave-ness",		"",							"", "", "", "", "", ""},
+		{"", "Not yet...",					"",							"",							"", "", "", "", "", ""},
+		{"", "Way too much cave here",		"Caving~", 					"More caving~",				"Still caving~", "Don't you just love caves?", "Uuuggguuu~", "Caaa...", "ve?", ""},
+		{"", "",							"",							"",							"", "", "", "", "WOAH! more cave", ""},
+		{"", "jk more cave",				"FREEDOM!",					"YES! IT\'S AN EXIT!", 		"No, that seems like an actual light...", "Seems suspicious", "Is that a light?", "/endcavewhen", "*yawn*", ""},
+		{"", "jkjk you're out of the cave",	"",							"",							"", "", "", "", "", ""}
 };
 
 void clean() {
@@ -61,6 +76,8 @@ void clean() {
 }
 
 int main() {
+	xpos = 1;
+	ypos = 1;
 	using namespace std;
 	int newg = 0;
 	system("printf '\e[8;30;125t'");
@@ -150,7 +167,7 @@ void save() {
 	file.open("savegame");
 	file << haspart << ",";
 	file << plr.name[0] << ",";
-	for(i=0;i < 6; i++)
+	for(i=0;i < 7; i++)
 		file << plr.stat[i] << ",";
 	for(i=0; i < 4; i++)
 		file << plr.xp[i] << ",";
@@ -217,7 +234,7 @@ void load() {
 	haspart = std::stoi(data[total]);
 	total++;
 	plr.name[0] = data[total];
-	for(i=0;i < 6; i++) {
+	for(i=0;i < 7; i++) {
 		total++;
 		plr.stat[i] = std::stoi(data[total]); }
 	for(i=0; i < 4; i++) {
@@ -326,12 +343,16 @@ void mainm() {
 		delwin(info);
 		endwin();
 		exit(EXIT_SUCCESS);
-
+	}
+	if(usr == 6) {
+		text.resize(0);
+		text.push_back("You came here from the " + lastdir);
+		map();
 	}
 }
 
 void battle() {
-	plr.stat[0] = 25;
+	plr.stat[1] = plr.stat[0];
 	text.resize(0);
 	text.push_back("Choose enemy:");
 	usr = cmenu(1, text);
@@ -455,236 +476,10 @@ void inv() {
 	prompt();
 }
 
-int cmenu(int set, std::vector<std::string> text) {
-	clean();
-	highlight = 1;
-	ch = 0;
-
-	if(scrn==false) {
-		initscr();
-		scrn=true;
-		cbreak();
-		noecho();
-		keypad(stdscr, TRUE);
-		refresh();
-	}
-
-	WINDOW *wmenu = newwin(7, 100, 11, 0);
-	WINDOW *info = newwin(8, 70, 0, 0);
-	WINDOW *user = newwin(11, 25, 1, (col * 4 / 5));
-	WINDOW *wpart = newwin(10, 25, 1, (col * 3 / 5));
-
-	//Isn't inventory call
-	if(set != 100) {
-		n_choices = c_choices[set];
-		items = (ITEM **)calloc(n_choices + 1, sizeof(ITEM *));
-		for(i = 0; i < n_choices; ++i)
-			items[i] = new_item(choices[set][i], choices[set+10][i]);
-		items[n_choices] = (ITEM *)NULL;
-		menu = new_menu((ITEM **)items);
-	}
-
-	//Is inventory call
-	if(set == 100) {
-		fmenu = 5;
-		n_choices = 5;
-		items = (ITEM **)calloc(n_choices + 1, sizeof(ITEM *));
-		for(i = 0; i < n_choices; ++i)
-			items[i] = new_item(inventory[page][i].c_str(), inventory[page+5][i].c_str());
-		items[n_choices] = (ITEM *)NULL;
-		menu = new_menu((ITEM **)items);
-	}
-	if(set == 0)
-		fmenu = 1;
-	if(set == 1)
-		fmenu = 2;
-	if(set == 2)
-		fmenu = 3;
-	if(set == 3)
-		fmenu = 4;
-	set_menu_win(menu, wmenu);
-	set_menu_sub(menu, derwin(wmenu, 5, 70, 5, 0));
-	set_menu_mark(menu, " > ");
-
-	werase(stdscr);
-	wborder(info, 0, 0, 0, 0, 0, 0, 0, 0);
-	wborder(user, 0, 0, 0, 0, 0, 0, 0, 0);
-	refresh();
-	wrefresh(info);
-	wrefresh(user);
-	for(i=0; i < text.size(); i++) {
-		std::string str = text[i];
-		prints(str);
-	}
-	for(i=0; i < queue.size(); i++) {
-		std::string str = queue[i];
-		prints(str);
-	}
-	if(part.info[0] != "") {
-		wborder(wpart, 0, 0, 0, 0, 0, 0, 0, 0);
-		wrefresh(wpart);
-		mvprintw(0, col * 3 / 5, (part.info[0] + ":").c_str());
-		printp("HP: " + std::to_string(part.stat[0]));
-		printp("Attack: " + std::to_string(part.stat[1]));
-		printp("Defense: " + std::to_string(part.stat[2]));
-		printp("Agility: " + std::to_string(part.stat[3]));
-		printp("");
-		printp("Level: " + std::to_string(part.xp[2]));
-		printp("EXP: " + std::to_string(part.xp[0]) + "/" + std::to_string(part.xp[1]));
-		refresh();
-	}
-	if(noi == 0) {
-		mvprintw(0, col * 4 / 5, (plr.name[0] + ":").c_str());
-		printu("HP: " + std::to_string(plr.stat[0]));
-		printu("Mana: " + std::to_string(plr.stat[4]));
-		printu("Attack: " + std::to_string(plr.stat[1]));
-		printu("Intelligence: " + std::to_string(plr.stat[5]));
-		printu("Defense: " + std::to_string(plr.stat[2]));
-		printu("Agility: " + std::to_string(plr.stat[3]));
-		printu("");
-		printu("Level: " + std::to_string(plr.xp[2]));
-		printu("EXP: " + std::to_string(plr.xp[0]) + "/" + std::to_string(plr.xp[1]));
-	}
-	refresh();
-	post_menu(menu);
-	wrefresh(wmenu);
-	set_escdelay(25);
-	move(11, 0);
-	mvprintw(28, 1, "%d, %d", (highlight + (page*5)), page);
-	mvprintw(28, 100, "Press \"?\" for help");
-	if(set == 100) {
-		if(page == 0) {
-			mvprintw(9, 20, "--->");
-			refresh();
-		} else if(page == pages) {
-			mvprintw(9, 3, "<---");
-			refresh();
-		} else {
-			mvprintw(9, 3, "<---             --->");
-			refresh();
-		}
-	}
-	move(11, 0);
-	refresh();
-
-	while((c = getch())){
-		switch(c) {
-			//If user presses up arrow
-			case KEY_UP:
-				if(highlight == 1)
-					highlight=1;
-				else
-					--highlight;
-				menu_driver(menu, REQ_UP_ITEM);
-				mvprintw(28, 1, "%d, %d", (highlight + (page*5)), page);
-				refresh();
-				break;
-			//If user presses down arrow
-			case KEY_DOWN:
-				if(highlight == n_choices) {
-					highlight=n_choices;
-				} else {
-					++highlight;
-				}
-				mvprintw(28, 1, "%d, %d", (highlight + (page*5)), page);
-				refresh();
-				menu_driver(menu, REQ_DOWN_ITEM);
-				break;
-			case KEY_RIGHT:
-				if(set == 100) {
-					if(page < pages) {
-						++page;
-						highlight = (page * 5) + 1;
-					} else {
-						page = pages;
-					}
-				makeitems(100);
-				}
-				break;
-			case KEY_LEFT:
-				if(set == 100) {
-					if(page > 0) {
-						--page;
-						highlight = (page * 5) + 1;
-					} else {
-						page = 0;
-					}
-				makeitems(100);
-				}
-				break;
-			//If user presses escape key in the menu
-			case 27:
-				if(set == 100)
-					ch = -1;
-					break;
-				break;
-			//If user presses enter key
-			case 10:
-				ch = highlight;
-				if(set==100)
-					ch = highlight + (page*5);
-				page = 0;
-				break;
-			//User presses "?" key
-			case 63:
-				help();
-				break;
-			case 83:
-				save();
-				break;
-			//If user presses control key
-			case BUTTON_CTRL:
-				//This is beautiful, works like a charm :)
-				while((t = getch())) {
-					switch(t) {
-						case 99:
-							system("clear");
-							free_menu(menu);
-							clean();
-							delwin(wmenu);
-							endwin();
-							exit(EXIT_SUCCESS);
-							break;
-						default:
-							refresh();
-							wrefresh(wmenu);
-							break;
-					}
-					wrefresh(wmenu);
-				}
-				if(t != 0) {
-					break;
-				}
-				break;
-			default:
-				mvprintw(28, 1, "%d, %d", highlight, page);
-				refresh();
-				wrefresh(wmenu);
-				break;
-		}
-		wrefresh(wmenu);
-	if(ch != 0)
-		break;
-	}
-	unpost_menu(menu);
-	for(i=0; i < item_count(menu); i++) {
-		free_item(items[i]);
-	}
-	text.clear();
-	text.shrink_to_fit();
-	queue.clear();
-	queue.shrink_to_fit();
-	//free_menu(menu);
-	clean();
-	//isBattle = false;
-	noi = 0;
-	return(ch);
-}
-
 void prompt() {
 	dam = plr.stat[1];
-	agil = plr.stat[3];
-	if(plr.stat[0] <= 0) {
+	agil = plr.stat[4];
+	if(plr.stat[1] <= 0) {
 		death();
 	}
 	for(i=0; i < queue.size(); i++) {
@@ -697,25 +492,24 @@ void prompt() {
 }
 
 void enemyact() {
+	dam = now.stat[1];
 	int diff = dam * 20 / 100;
 	dam = (dam-diff) + rand() % (int)((dam+diff)-(dam-diff)+1);
-	agil = plr.stat[3];
+	agil = plr.stat[4];
 	dodge = agil + rand() % (int)(10 - agil + 1);
 
 	if(dodge == 10) {
 		queue.push_back("You dodged!");
 	} else if(dodge!=10) {
-		int diff = dam * 20 / 100;
-		dam = (dam-diff) + rand() % (int)((dam+diff)-(dam-diff)+1);
 		//Reduce damage by player defense, but keep above 0
 		dam = std::max(0, dam-plr.stat[2]);
-		plr.stat[0] -= dam;
+		plr.stat[1] -= dam;
 		queue.push_back("The " + now.info[0] + " dealt " + std::to_string(dam) + " damage to you!");
-		if(plr.stat[0] <= 0) {
+		if(plr.stat[1] <= 0) {
 			death();
 		}
 	}
-	if(plr.stat[0] <= 0) {
+	if(plr.stat[1] <= 0) {
 		death();
 	}
 	for(i=0; i < 10; i++) {
@@ -753,7 +547,10 @@ void enemydefeat() {
 			part.xp[1] = 35 * temp;
 			part.xp[0] = xp;
 
-			//Player stat changes will go here
+			//Partner stat changes will go here
+			part.stat[0] += (plr.xp[2] * 2);
+			part.stat[1] += (plr.xp[2] * 2);
+			part.stat[2] += (plr.xp[2] * 2);
 
 
 		//Gained xp wasn't enough to level up
@@ -780,7 +577,11 @@ void enemydefeat() {
 		plr.xp[0] = xp;
 
 		//Player stat changes will go here
-
+		plr.stat[0] += (plr.xp[2] * 1.5);
+		plr.stat[2] += (plr.xp[2] * 1.5);
+		plr.stat[3] += (plr.xp[2] * 1.5);
+		plr.stat[5] += (plr.xp[2] * 1.5);
+		plr.stat[6] += (plr.xp[2] * 1.5);
 
 	//Gained xp wasn't enough to level up
 	} else if(xp + plr.xp[0] < plr.xp[1]) {
@@ -818,7 +619,7 @@ void plract(int usr) {
 			now.stat[0] -= dam;
 			clean();
 			if(dam >= 1) {
-				tempstr = "You dealt " + std::to_string(dam) + " to the " + now.info[0] + "!";
+				tempstr = "You dealt " + std::to_string(dam) + " damage to the " + now.info[0] + "!";
 				queue.push_back("You dealt " + std::to_string(dam) + " damage to the " + now.info[0] + "!");
 			} else {
 				queue.push_back("Your attack did no damage!");
@@ -882,7 +683,7 @@ void allyact() {
 			now.stat[0] -= dam;
 			clean();
 			if(dam >= 1) {
-				tempstr = part.info[0] + " dealt " + std::to_string(dam) + " to the " + now.info[0] + "!";
+				tempstr = part.info[0] + " dealt " + std::to_string(dam) + " damage to the " + now.info[0] + "!";
 				queue.push_back(part.info[0] + " " + std::to_string(dam) + " damage to the " + now.info[0] + "!");
 			} else {
 				queue.push_back(part.info[0] + "\'s attack did no damage!");
@@ -1001,10 +802,11 @@ void uspell() {
 }
 
 void death() {
-	//print("You have died!");
+	prints("You have died!");
 	for(i=0; i < n_choices + 1; i++) {
 		free_item(items[i]);
 	}
+	getch();
 	free_menu(menu);
 	clean();
 	delwin(wmenu);
@@ -1012,4 +814,288 @@ void death() {
 	delwin(info);
 	endwin();
 	exit(EXIT_SUCCESS);
+}
+
+int cmenu(int set, std::vector<std::string> text) {
+	clean();
+	highlight = 1;
+	ch = 0;
+	if(scrn==false) {
+		initscr();
+		scrn=true;
+		cbreak();
+		noecho();
+		keypad(stdscr, TRUE);
+		refresh();
+	}
+
+	WINDOW *wmenu = newwin(7, 100, 11, 0);
+	WINDOW *info = newwin(8, 70, 0, 0);
+	WINDOW *user = newwin(11, 25, 1, (col * 4 / 5));
+	WINDOW *wpart = newwin(10, 25, 1, (col * 3 / 5));
+
+	//Isn't inventory call
+	if(set != 100) {
+		n_choices = c_choices[set];
+		items = (ITEM **)calloc(n_choices + 1, sizeof(ITEM *));
+		for(i = 0; i < n_choices; ++i)
+			items[i] = new_item(choices[set][i], choices[set+10][i]);
+		items[n_choices] = (ITEM *)NULL;
+		menu = new_menu((ITEM **)items);
+	}
+
+	//Is inventory call
+	if(set == 100) {
+		fmenu = 5;
+		n_choices = 5;
+		items = (ITEM **)calloc(n_choices + 1, sizeof(ITEM *));
+		for(i = 0; i < n_choices; ++i)
+			items[i] = new_item(inventory[page][i].c_str(), inventory[page+5][i].c_str());
+		items[n_choices] = (ITEM *)NULL;
+		menu = new_menu((ITEM **)items);
+	}
+	if(set == 42) {
+		queue.push_back(mapa[ypos][xpos]);
+		//"North", "South", "East", "West"
+		n_choices = 0;
+		if(mapa[ypos+1][xpos] != "") {
+			n_choices++;}
+		if(mapa[ypos-1][xpos] != "") {
+			n_choices++;}
+		if(mapa[ypos][xpos+1] != "") {
+			n_choices++;}
+		if(mapa[ypos][xpos-1] != "") {
+			n_choices++;}
+		items = (ITEM **)calloc(n_choices + 1, sizeof(ITEM *));
+		i=0;
+		if(mapa[ypos+1][xpos] != ""){
+			items[i] = new_item("North", "");i++;}
+
+		if(mapa[ypos-1][xpos] != "") {
+			items[i] = new_item("South", "");i++;}
+
+		if(mapa[ypos][xpos-1] != "") {
+			items[i] = new_item("East", "");i++;}
+
+		if(mapa[ypos][xpos+1] != "") {
+			items[i] = new_item("West", "");}
+
+		items[n_choices] = (ITEM *)NULL;
+		menu = new_menu((ITEM **)items);
+	}
+	if(set == 0)
+		fmenu = 1;
+	if(set == 1)
+		fmenu = 2;
+	if(set == 2)
+		fmenu = 3;
+	if(set == 3)
+		fmenu = 4;
+	set_menu_win(menu, wmenu);
+	set_menu_sub(menu, derwin(wmenu, 5, 70, 5, 0));
+	set_menu_mark(menu, " > ");
+
+	werase(stdscr);
+	wborder(info, 0, 0, 0, 0, 0, 0, 0, 0);
+	wborder(user, 0, 0, 0, 0, 0, 0, 0, 0);
+	refresh();
+	wrefresh(info);
+	wrefresh(user);
+	if(set != 42) {
+		for(i=0; i < text.size(); i++) {
+			std::string str = text[i];
+			prints(str);
+		}
+	}
+	if(set == 42) {
+		if(test != "") {
+			std::string asdf = text[0];
+			mvwprintw(stdscr, 9, 1, asdf.c_str());
+			refresh();
+		}
+	}
+	for(i=0; i < queue.size(); i++) {
+		std::string str = queue[i];
+		prints(str);
+	}
+	if(part.info[0] != "") {
+		wborder(wpart, 0, 0, 0, 0, 0, 0, 0, 0);
+		wrefresh(wpart);
+		mvprintw(0, col * 3 / 5, (part.info[0] + ":").c_str());
+		printp("HP: " + std::to_string(part.stat[0]));
+		printp("Attack: " + std::to_string(part.stat[1]));
+		printp("Defense: " + std::to_string(part.stat[2]));
+		printp("Agility: " + std::to_string(part.stat[3]));
+		printp("");
+		printp("Level: " + std::to_string(part.xp[2]));
+		printp("EXP: " + std::to_string(part.xp[0]) + "/" + std::to_string(part.xp[1]));
+		refresh();
+	}
+	if(noi == 0) {
+		mvprintw(0, col * 4 / 5, (plr.name[0] + ":").c_str());
+		printu("HP: " + std::to_string(plr.stat[1]));
+		printu("Mana: " + std::to_string(plr.stat[5]));
+		printu("Attack: " + std::to_string(plr.stat[2]));
+		printu("Intelligence: " + std::to_string(plr.stat[6]));
+		printu("Defense: " + std::to_string(plr.stat[3]));
+		printu("Agility: " + std::to_string(plr.stat[4]));
+		printu("");
+		printu("Level: " + std::to_string(plr.xp[2]));
+		printu("EXP: " + std::to_string(plr.xp[0]) + "/" + std::to_string(plr.xp[1]));
+	}
+	refresh();
+	post_menu(menu);
+	wrefresh(wmenu);
+	set_escdelay(25);
+	move(11, 0);
+	mvprintw(28, 1, "%d, %d", (highlight + (page*5)), page);
+	mvprintw(28, 100, "Press \"?\" for help");
+	if(set == 100) {
+		if(page == 0) {
+			mvprintw(9, 20, "--->");
+			refresh();
+		} else if(page == pages) {
+			mvprintw(9, 3, "<---");
+			refresh();
+		} else {
+			mvprintw(9, 3, "<---             --->");
+			refresh();
+		}
+	}
+	move(11, 0);
+	refresh();
+
+	while((c = getch())){
+		switch(c) {
+			//If user presses up arrow
+			case KEY_UP:
+				if(highlight == 1)
+					highlight=1;
+				else
+					--highlight;
+				menu_driver(menu, REQ_UP_ITEM);
+				mvprintw(28, 1, "%d, %d", (highlight + (page*5)), page);
+				refresh();
+				break;
+			//If user presses down arrow
+			case KEY_DOWN:
+				if(highlight == n_choices) {
+					highlight=n_choices;
+				} else {
+					++highlight;
+				}
+				mvprintw(28, 1, "%d, %d", (highlight + (page*5)), page);
+				refresh();
+				menu_driver(menu, REQ_DOWN_ITEM);
+				break;
+			case KEY_RIGHT:
+				if(set == 100) {
+					if(page < pages) {
+						++page;
+						highlight = (page * 5) + 1;
+					} else {
+						page = pages;
+					}
+				makeitems(100);
+				}
+				break;
+			case KEY_LEFT:
+				if(set == 100) {
+					if(page > 0) {
+						--page;
+						highlight = (page * 5) + 1;
+					} else {
+						page = 0;
+					}
+				makeitems(100);
+				}
+				break;
+			//If user presses escape key in the menu
+			case 27:
+				if(set == 100)
+					ch = -1;
+				if(set == 42)
+					ch = -1;
+				break;
+			//If user presses enter key
+			case 10:
+				ch = highlight;
+				if(set==100)
+					ch = highlight + (page*5);
+				page = 0;
+				if(set == 42) {
+					test = item_name(current_item(menu));
+				}
+				break;
+			//User presses "?" key
+			case 63:
+				help();
+				break;
+			case 83:
+				save();
+				break;
+			//If user presses control key
+			case BUTTON_CTRL:
+				//This is beautiful, works like a charm :)
+				while((t = getch())) {
+					switch(t) {
+						case 99:
+							system("clear");
+							free_menu(menu);
+							clean();
+							delwin(wmenu);
+							endwin();
+							exit(EXIT_SUCCESS);
+							break;
+						default:
+							refresh();
+							wrefresh(wmenu);
+							break;
+					}
+					wrefresh(wmenu);
+				}
+				if(t != 0) {
+					break;
+				}
+				break;
+			default:
+				mvprintw(28, 1, "%d, %d", highlight, page);
+				refresh();
+				wrefresh(wmenu);
+				break;
+		}
+		wrefresh(wmenu);
+	if(ch != 0)
+		break;
+	}
+	unpost_menu(menu);
+	for(i=0; i < item_count(menu); i++) {
+		free_item(items[i]);
+	}
+	text.clear();
+	text.shrink_to_fit();
+	queue.clear();
+	queue.shrink_to_fit();
+	//free_menu(menu);
+	clean();
+	//isBattle = false;
+	noi = 0;
+	return(ch);
+}
+
+void map() {
+	usr = cmenu(42, text);
+	if(usr == -1) {
+		mainm();
+	}
+	if(test == "North") {
+		ypos++; text.resize(0); text.push_back("You came here from the south"); lastdir = "south";}
+	if(test == "South") {
+		ypos--; text.resize(0); text.push_back("You came here from the north"); lastdir = "north";}
+	if(test == "East") {
+		xpos--; text.resize(0); text.push_back("You came here from the west"); lastdir = "west";}
+	if(test == "West") {
+		xpos++; text.resize(0); text.push_back("You came here from the east"); lastdir = "east";}
+
+	map();
 }
