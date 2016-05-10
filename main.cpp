@@ -15,7 +15,7 @@ WINDOW *wpart;
 
 std::string test;
 int c_choices[10] = {6, 4, 5, 7, 4, 2, 2, 0, 0, 2};
-player plr ={{"Player"}, {25, 7, 1, 2, 15, 10}, {0, 20, 1, 10}};
+player plr ={{"Player"}, {25, 25, 7, 1, 2, 15, 10}, {0, 20, 1, 10}};
 
 const char *choices[][10] = {
 		{"Test battle", "Save", "Load", "Options", "Exit", "Test map"},
@@ -347,6 +347,7 @@ void mainm() {
 		delwin(user);
 		delwin(info);
 		endwin();
+		system("killall Terminal");
 		exit(EXIT_SUCCESS);
 	}
 	if(usr == 6) {
@@ -361,8 +362,9 @@ void battle() {
 	text.push_back("Choose enemy:");
 	usr = cmenu(1, text);
 	if(usr == 1) {
-		queue.push_back("No");
-		battle();
+		now = dummy;
+		queue.push_back(("A " + now.info[1] + now.info[0] + " appears!"));
+		prompt();
 	}
 	if(usr == 2) {
 		clean();
@@ -538,18 +540,10 @@ void enemyact() {
 	prompt();
 }
 
-void enemydefeat() {
-	queue.clear();
-	queue.shrink_to_fit();
-
-	queue.push_back(tempstr);
-	queue.push_back("You defeated the " + now.info[0] + "!");
-
+void glevel() {
 	int diff = now.stat[0] * 20 / 100;
 	int xp = now.stat[0] + diff;
-
 	if(part.info[0] != "") {
-		queue.push_back(part.info[0] + " gained " + std::to_string(xp) + " xp!");
 		//Get value of excess xp
 		if(xp + part.xp[0] >= part.xp[1]) {
 			//Set xp equal to gained xp + current xp - needed xp (e.g- at level one, needed xp is 20: have 12xp, gain 12xp, subtract 20 = 4 left over)
@@ -561,7 +555,7 @@ void enemydefeat() {
 
 			//Handling decimal values
 			double temp = part.xp[2] / 2;
-			part.xp[1] = 35 * temp;
+			part.xp[1] = 45 * temp;
 			part.xp[0] = xp;
 
 			//Partner stat changes will go here
@@ -579,11 +573,12 @@ void enemydefeat() {
 		} else if(xp + part.xp[0] < part.xp[1]) {
 			part.xp[0] += xp;
 		}
+		if(xp + part.xp[0] >= part.xp[1]) {
+			glevel();
+		}
 	}
 
-	diff = now.stat[0] * 20 / 100;
-	xp = now.stat[0] + diff;
-	queue.push_back("You gained " + std::to_string(xp) + " xp!");
+
 	//Get value of excess xp
 	if(xp + plr.xp[0] >= plr.xp[1]) {
 		//Set xp equal to gained xp + current xp - needed xp (e.g- at level one, needed xp is 20: have 12xp, gain 12xp, subtract 20 = 4 left over)
@@ -595,7 +590,7 @@ void enemydefeat() {
 
 		//Handling decimal values
 		double temp = plr.xp[2] / 2;
-		plr.xp[1] = 35 * temp;
+		plr.xp[1] = 45 * temp;
 		plr.xp[0] = xp;
 
 		//Player stat changes will go here
@@ -609,6 +604,25 @@ void enemydefeat() {
 	} else if(xp + plr.xp[0] < plr.xp[1]) {
 		plr.xp[0] += xp;
 	}
+	if(xp + plr.xp[0] >= plr.xp[1]) {
+		glevel();
+	}
+}
+
+void enemydefeat() {
+	queue.clear();
+	queue.shrink_to_fit();
+
+	queue.push_back(tempstr);
+	queue.push_back("You defeated the " + now.info[0] + "!");
+
+	int diff = now.stat[0] * 20 / 100;
+	int xp = now.stat[0] + diff;
+	if(part.info[0] != "") {
+		queue.push_back(part.info[0] + " gained " + std::to_string(xp) + " xp!");
+	}
+	queue.push_back("You gained " + std::to_string(xp) + " xp!");
+	glevel();
 
 	WINDOW *info = newwin(8, 70, 0, 0);
 	refresh();
@@ -845,6 +859,7 @@ void death() {
 	delwin(user);
 	delwin(info);
 	endwin();
+	system("killall Terminal");
 	exit(EXIT_SUCCESS);
 }
 
