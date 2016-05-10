@@ -18,7 +18,7 @@
  */
 
 int pcount = 3;
-
+ally noally = {{ "", "", "" }, {0, 0, 0, 0, 0}, {0, 0, 0, 0}};
 ally prime = {{"Liberty Prime", "The most patriotic robot ever", "Nukes"}, {40, 40, 10, 1, 0}, {0, 25, 1, 15}};
 ally chen = {{"Chen", "Nyaaa~", "Spellcasting"}, {25, 25, 20, 2, 6}, {0, 25, 1, 15}};
 ally verne = {{"Verne", "Verne", "Verne-ness"}, {30, 30, 10, 1, 1}, {0, 25, 1, 15}};

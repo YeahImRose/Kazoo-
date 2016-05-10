@@ -14,7 +14,7 @@ WINDOW *user;
 WINDOW *wpart;
 
 std::string test;
-int c_choices[10] = {6, 4, 5, 7, 4, 2, 2, 0, 0, 2};
+int c_choices[10] = {6, 4, 5, 7, 4, 3, 2, 0, 0, 2};
 player plr ={{"Player"}, {25, 25, 7, 1, 2, 15, 10}, {0, 20, 1, 10}};
 
 const char *choices[][10] = {
@@ -23,17 +23,17 @@ const char *choices[][10] = {
 		{"Attack", "Spells", "Check enemy", "Items", "RUNNN!!!"},
 		{"Firebolt", "Frost", "Bolt", "Quake", "Poison", "Lifesteal", "Heal"},
 		{"Liberty Prime", "Nep-Nep", "Something-something Verne", "Chen"},
-		{"Delete save", "Back"},
+		{"Delete save", "Remove current ally", "Back"},
 		{"Attack", "Skills"},
 		{},
 		{},
 		{"Yes", "No"},
 		{"   Initiates debug battle", "   Save game", "   Load game", "   Open options menu", "   Closes the game", "Enters debug map mode"},
-		{"   Not implemented", "   Could be a bit stronger", "   Not implemented", "   Return to main menu"},
+		{"   Lots of health", "   Could be a bit stronger", "   A tough-ish enemy", "   Return to main menu"},
 		{"   Basic attack", "   Pew pew magic!", "   Display enemy stats and info", "   View/Use items", "   Run away"},
 		{"   An incendiary explosion with a chance to inflict burn", "   An ancient spell from the ice age- chance to inflict freeze", "   A strike of lightning from the sky- chance to inflict paralysis", "   A spell that erupts the ground to pummel the enemy", "   A venomous spell that will probably inflict poison", "   A spell from the vampire underworld that absorbs the enemy's health", "   An angelic spell to restore some of your health"},
 		{"   Throws nukes to defeat communism", "   What do you mean, \"Fourth Wall\"?", "   <Insert lore here>", "   Adorbs"},
-		{"   Deletes your save...", "   Return to main menu"},
+		{"   Deletes your save...", "   Un-equip your current ally", "   Return to main menu"},
 		{"   Basic attack", "   Ally's skills"},
 		{},
 		{},
@@ -55,7 +55,7 @@ std::string inventory[][5] = {
 std::string mapa[10][10] = {
 		//North \/, south /\, east <, west >
 		{"", "", "", "", "", "", "", "", "", ""},
-		{"", "", "", "",	"", "", "", "", "", ""},
+		{"", "", "", "", "", "", "", "", "", ""},
 		{"", cave, 	cave1,	cave2,	outside1,	"", "", "", "", ""},
 		{"", "", "", "", forest1, "", "", "", "", ""},
 		{"", "", "", "", "", "", "", "", "", ""},
@@ -81,6 +81,7 @@ void clean() {
 }
 
 int main() {
+	player plr ={{"Player"}, {25, 25, 7, 1, 2, 15, 10}, {0, 20, 1, 10}};
 	xpos = 1;
 	ypos = 2;
 	using namespace std;
@@ -226,7 +227,7 @@ void load() {
 	file.open("savegame");
 
 	if(!file.is_open()) {
-		perror("Error open");
+		perror("Error opening save");
 		mainm();
 	}
 	std::string data[1000];
@@ -337,9 +338,27 @@ void mainm() {
 		mainm();
 	}
 	if(usr == 4) {
-		text.resize(0);
-		text.push_back("Not implemented yet!");
-		mainm();
+		usr = cmenu(5, text);
+		if(usr == 1) {
+			text.resize(0);
+			text.push_back("Are you sure?");
+			usr = cmenu(9, text);
+			if(usr == 1) {
+				std::remove("savegame");
+				prints("Restarting game...");
+				main();
+			} else {
+				mainm();
+			}
+		}
+		if(usr == 2) {
+			keeppart();
+			part = noally;
+			mainm();
+		}
+		if(usr == 3) {
+			mainm();
+		}
 	}
 	if(usr == 5) {
 		clean();
@@ -347,7 +366,6 @@ void mainm() {
 		delwin(user);
 		delwin(info);
 		endwin();
-		system("killall Terminal");
 		exit(EXIT_SUCCESS);
 	}
 	if(usr == 6) {
@@ -859,7 +877,6 @@ void death() {
 	delwin(user);
 	delwin(info);
 	endwin();
-	system("killall Terminal");
 	exit(EXIT_SUCCESS);
 }
 

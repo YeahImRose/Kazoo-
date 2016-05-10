@@ -17,6 +17,7 @@
 #include <fstream>
 #include <string>
 #include <vector>
+#include <cstdlib>
 //Planning on eventually adding sounds
 #import <OpenAL/al.h>
 #import <OpenAL/alc.h>
@@ -30,15 +31,11 @@ int armor;
 int points, difficulty, classsc, usr, tut_finished;
 //Battle variables
 int agil, dodge, dam, enerand, haspart = 0;
-//Menu variables
-int highlight, n_choices, i, c, ch, t, im;
+//Menu variables + some
+int highlight, n_choices, i, c, ch, t, noi, fmenu, xpos, ypos, pages, row, col;
 int ulines = 0, plines = 0, lines = 0;
-int row, col;
-int page = 0; int pages;
-int noi, fmenu;
-//Menu lib variable
+int page = 0;
 bool scrn = false;
-int xpos, ypos;
 
 std::string triggers[25];
 /*std::string yes_words [] = {"yes", "y", "true", "indeed", "yeah", "afirmative"};
