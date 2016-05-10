@@ -29,7 +29,7 @@ int armor;
 //Game variables
 int points, difficulty, classsc, usr, tut_finished;
 //Battle variables
-int agil, dodge, dam, enerand, maxhp, haspart = 0;
+int agil, dodge, dam, enerand, haspart = 0;
 //Menu variables
 int highlight, n_choices, i, c, ch, t, im;
 int ulines = 0, plines = 0, lines = 0;
@@ -62,7 +62,7 @@ struct player {
 
 struct ally {
 	std::string info[3]; //Name, info, skill
-	int stat[4]; //HP, damage, defense, agility
+	int stat[5]; //Max HP, current HP, damage, defense, agility
 	int xp[4]; //Current xp, xp needed for next level, current level, max level
 	int skill[2]; //Has skill, skill level
 	bool buff[10]; //Regen, def up, atk up, agi up, int up, poison, def down, atk down, agi down, int down, paralysis/frozen
@@ -71,7 +71,7 @@ struct ally {
 
 struct enemy {
 	std::string info[2]; //Name, info
-	int stat[4]; //HP, damage, defense, agility
+	int stat[5]; //Max HP, current HP, damage, defense, agility
 	bool buff[10]; //Regen, def up, atk up, agi up, int up, poison, def down, atk down, agi down, int down, paralysis/frozen
 	int times[10]; //Buff timers for regen, def up, atk up, agi up, int up, poison, def down, atk down, agi down, int down, paralysis/frozen
 } now;

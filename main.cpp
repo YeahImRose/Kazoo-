@@ -1,4 +1,5 @@
 #include "main.h"
+#include "map.h"
 #include "enemies.h"
 #include "allies.h"
 
@@ -16,7 +17,7 @@ std::string test;
 int c_choices[10] = {6, 4, 5, 7, 4, 2, 2, 0, 0, 2};
 player plr ={{"Player"}, {25, 7, 1, 2, 15, 10}, {0, 20, 1, 10}};
 
-const char *choices[][20] = {
+const char *choices[][10] = {
 		{"Test battle", "Save", "Load", "Options", "Exit", "Test map"},
 		{"Training dummy", "Fodder enemy", "Test boss", "Back"},
 		{"Attack", "Spells", "Check enemy", "Items", "RUNNN!!!"},
@@ -52,17 +53,21 @@ std::string inventory[][5] = {
 };
 
 std::string mapa[10][10] = {
-		//North /\, south \/, east <, west >
-		{"", "", 							"",							"",							"", "", "", "", "", ""},
-		{"", "You are in a cave", 			"",							"",							"", "", "", "", "", ""},
-		{"", "Still in a cave",				"Woah, there's more cave?",	"",							"", "", "", "", "", ""},
-		{"", "",							"Still more cave", 			"",							"", "", "", "", "", ""},
-		{"", "Maybe less cave soon?",		"Continued cave-ness",		"",							"", "", "", "", "", ""},
-		{"", "Not yet...",					"",							"",							"", "", "", "", "", ""},
-		{"", "Way too much cave here",		"Caving~", 					"More caving~",				"Still caving~", "Don't you just love caves?", "Uuuggguuu~", "Caaa...", "ve?", ""},
-		{"", "",							"",							"",							"", "", "", "", "WOAH! more cave", ""},
-		{"", "jk more cave",				"FREEDOM!",					"YES! IT\'S AN EXIT!", 		"No, that seems like an actual light...", "Seems suspicious", "Is that a light?", "/endcavewhen", "*yawn*", ""},
-		{"", "jkjk you're out of the cave",	"",							"",							"", "", "", "", "", ""}
+		//North \/, south /\, east <, west >
+		{"", "", "", "", "", "", "", "", "", ""},
+		{"", "", "", "",	"", "", "", "", "", ""},
+		{"", cave, 	cave1,	cave2,	outside1,	"", "", "", "", ""},
+		{"", "", "", "", forest1, "", "", "", "", ""},
+		{"", "", "", "", "", "", "", "", "", ""},
+		{"", "", "", "", "", "", "", "", "", ""}
+};
+std::string mapinfo[10][10] = {
+		{"Nothing", "Nothing", "Nothing", "Nothing", "Nothing", "Nothing", "Nothing", "Nothing", "Nothing", "Nothing"},
+		{"Nothing", "Nothing", "Nothing", "Nothing", "Nothing", "Nothing", "Nothing", "Nothing", "Nothing", "Nothing"},
+		{"Nothing", icave    , icave1   , icave2   , ioutside1, "Nothing", "Nothing", "Nothing", "Nothing", "Nothing"},
+		{"Nothing", "Nothing", "Nothing", "Nothing",  iforest1, "Nothing", "Nothing", "Nothing", "Nothing", "Nothing"},
+		{"Nothing", "Nothing", "Nothing", "Nothing", "Nothing", "Nothing", "Nothing", "Nothing", "Nothing", "Nothing"},
+		{"Nothing", "Nothing", "Nothing", "Nothing", "Nothing", "Nothing", "Nothing", "Nothing", "Nothing", "Nothing"}
 };
 
 void clean() {
@@ -77,7 +82,7 @@ void clean() {
 
 int main() {
 	xpos = 1;
-	ypos = 1;
+	ypos = 2;
 	using namespace std;
 	int newg = 0;
 	system("printf '\e[8;30;125t'");
@@ -177,7 +182,7 @@ void save() {
 	if(haspart == 1) {
 		for(i=0; i < 3; i++)
 			file << part.info[i] << ",";
-		for(i=0;i < 4; i++)
+		for(i=0;i < 5; i++)
 			file << part.stat[i] << ",";
 		for(i=0; i < 4; i++)
 			file << part.xp[i] << ",";
@@ -186,7 +191,7 @@ void save() {
 
 		for(i=0; i < 3; i++)
 			file << pprime.info[i] << ",";
-		for(i=0;i < 4; i++)
+		for(i=0;i < 5; i++)
 			file << pprime.stat[i] << ",";
 		for(i=0; i < 4; i++)
 			file << pprime.xp[i] << ",";
@@ -195,7 +200,7 @@ void save() {
 
 		for(i=0; i < 3; i++)
 			file << pchen.info[i] << ",";
-		for(i=0;i < 4; i++)
+		for(i=0;i < 5; i++)
 			file << pchen.stat[i] << ",";
 		for(i=0; i < 4; i++)
 			file << pchen.xp[i] << ",";
@@ -204,7 +209,7 @@ void save() {
 
 		for(i=0; i < 3; i++)
 			file << pverne.info[i] << ",";
-		for(i=0;i < 4; i++)
+		for(i=0;i < 5; i++)
 			file << pverne.stat[i] << ",";
 		for(i=0; i < 4; i++)
 			file << pverne.xp[i] << ",";
@@ -248,7 +253,7 @@ void load() {
 		for(i=0; i < 3; i++){
 			total++;
 			part.info[i] = data[total];}
-		for(i=0;i < 4; i++){
+		for(i=0;i < 5; i++){
 			total++;
 			part.stat[i] = std::stoi(data[total]);}
 		for(i=0; i < 4; i++){
@@ -261,7 +266,7 @@ void load() {
 		for(i=0; i < 3; i++){
 			total++;
 			pprime.info[i] = data[total];}
-		for(i=0;i < 4; i++){
+		for(i=0;i < 5; i++){
 			total++;
 			pprime.stat[i] = std::stoi(data[total]);}
 		for(i=0; i < 4; i++){
@@ -274,7 +279,7 @@ void load() {
 		for(i=0; i < 3; i++){
 			total++;
 			pchen.info[i] = data[total];}
-		for(i=0;i < 4; i++){
+		for(i=0;i < 5; i++){
 			total++;
 			pchen.stat[i] = std::stoi(data[total]);}
 		for(i=0; i < 4; i++){
@@ -287,7 +292,7 @@ void load() {
 		for(i=0; i < 3; i++){
 			total++;
 			pverne.info[i] = data[total];}
-		for(i=0;i < 4; i++){
+		for(i=0;i < 5; i++){
 			total++;
 			pverne.stat[i] = std::stoi(data[total]);}
 		for(i=0; i < 4; i++){
@@ -346,7 +351,6 @@ void mainm() {
 	}
 	if(usr == 6) {
 		text.resize(0);
-		text.push_back("You came here from the " + lastdir);
 		map();
 	}
 }
@@ -370,12 +374,13 @@ void battle() {
 			now = slime;
 		}
 		queue.push_back(("A " + now.info[1] + now.info[0] + " appears!"));
-		maxhp = now.stat[0];
 		prompt();
 	}
 	if(usr == 3) {
-		queue.push_back("No");
-		battle();
+		now = bigslime;
+		queue.push_back(("A " + now.info[1] + now.info[0] + " appears!"));
+		queue.push_back("The giant slime gives itself regen!");
+		prompt();
 	}
 	if(usr == 4) {
 		clean();
@@ -477,7 +482,7 @@ void inv() {
 }
 
 void prompt() {
-	dam = plr.stat[1];
+	dam = plr.stat[2];
 	agil = plr.stat[4];
 	if(plr.stat[1] <= 0) {
 		death();
@@ -487,12 +492,12 @@ void prompt() {
 		prints(str);
 	}
 	text.resize(0);
-	text.push_back("Enemy HP: " + std::to_string(now.stat[0]));
+	text.push_back("Enemy HP: " + std::to_string(now.stat[1]));
 	plract(cmenu(2, text));
 }
 
 void enemyact() {
-	dam = now.stat[1];
+	dam = now.stat[2];
 	int diff = dam * 20 / 100;
 	dam = (dam-diff) + rand() % (int)((dam+diff)-(dam-diff)+1);
 	agil = plr.stat[4];
@@ -518,6 +523,18 @@ void enemyact() {
 		if(plr.times[i] == 0)
 			plr.buff[i] = false;
 	}
+
+	if(now.buff[0] == 1) {
+		int hpg = now.stat[0] * 10 / 100;
+		if(now.stat[1] + hpg >= now.stat[0]) {
+			queue.push_back("The " + now.info[0] + "\'s HP is at max!");
+			//Set HP to max
+			now.stat[1] = now.stat[0];
+		} else {
+			queue.push_back("The " + now.info[0] + " healed " + std::to_string(hpg) + " HP!");
+			now.stat[1] += hpg;
+		}
+	}
 	prompt();
 }
 
@@ -528,8 +545,8 @@ void enemydefeat() {
 	queue.push_back(tempstr);
 	queue.push_back("You defeated the " + now.info[0] + "!");
 
-	int diff = maxhp * 20 / 100;
-	int xp = maxhp + diff;
+	int diff = now.stat[0] * 20 / 100;
+	int xp = now.stat[0] + diff;
 
 	if(part.info[0] != "") {
 		queue.push_back(part.info[0] + " gained " + std::to_string(xp) + " xp!");
@@ -549,9 +566,14 @@ void enemydefeat() {
 
 			//Partner stat changes will go here
 			part.stat[0] += (plr.xp[2] * 2);
-			part.stat[1] += (plr.xp[2] * 2);
+			part.stat[1] = part.stat[0];
 			part.stat[2] += (plr.xp[2] * 2);
+			part.stat[3] += (plr.xp[2] * 2);
 
+			//Special stat increases
+			if(part.info[0] == "Chen") {
+				part.stat[4] = part.xp[2] / 2;
+			}
 
 		//Gained xp wasn't enough to level up
 		} else if(xp + part.xp[0] < part.xp[1]) {
@@ -559,8 +581,8 @@ void enemydefeat() {
 		}
 	}
 
-	diff = maxhp * 20 / 100;
-	xp = maxhp + diff;
+	diff = now.stat[0] * 20 / 100;
+	xp = now.stat[0] + diff;
 	queue.push_back("You gained " + std::to_string(xp) + " xp!");
 	//Get value of excess xp
 	if(xp + plr.xp[0] >= plr.xp[1]) {
@@ -605,7 +627,7 @@ void enemydefeat() {
 void plract(int usr) {
 	if(usr == 1) {
 		//Deals damage of random amount either 20% -/+ or equal to damage
-		agil = now.stat[3];
+		agil = now.stat[4];
 		dodge = agil + rand() % (int)(10 - agil + 1);
 
 		//Enemy dodged
@@ -615,8 +637,8 @@ void plract(int usr) {
 		//Enemy didn't dodge
 		} else if(dodge != 10) {
 			//Reduce damage by enemy defense, but keep above 0
-			dam = std::max(-1, dam-now.stat[2]);
-			now.stat[0] -= dam;
+			dam = std::max(-1, dam-now.stat[3]);
+			now.stat[1] -= dam;
 			clean();
 			if(dam >= 1) {
 				tempstr = "You dealt " + std::to_string(dam) + " damage to the " + now.info[0] + "!";
@@ -626,7 +648,7 @@ void plract(int usr) {
 			}
 		}
 
-		if(now.stat[0] < 1) {
+		if(now.stat[1] < 1) {
 			enemydefeat();
 		} else {
 			if(part.info[0] != "") {
@@ -642,9 +664,9 @@ void plract(int usr) {
 	}
 	//Check enemy
 	if(usr == 3) {
-		queue.push_back("Enemy damage: " + std::to_string(now.stat[1]));
-		queue.push_back("Enemy defense: " + std::to_string(now.stat[2]));
-		queue.push_back("Enemy agility: " + std::to_string(now.stat[3]));
+		queue.push_back("Enemy damage: " + std::to_string(now.stat[2]));
+		queue.push_back("Enemy defense: " + std::to_string(now.stat[3]));
+		queue.push_back("Enemy agility: " + std::to_string(now.stat[4]));
 		//queue.push_back("Not yet implemented!");
 		prompt();
 	}
@@ -654,14 +676,24 @@ void plract(int usr) {
 	}
 	//Run!
 	if(usr == 5) {
-		clean();
-		queue.push_back("Not yet implemented!");
-		prompt();
+		int spd = plr.stat[4];
+		int run = spd + rand() % (int)(10 - spd + 1);
+		if(run == 10) {
+			queue.resize(0);
+			queue.push_back("You ran away!");
+			now = none;
+			clean();
+			battle();
+			usr = 0;
+		} else if(run != 10){
+			queue.push_back("You couldn't get away!");
+			enemyact();
+		}
 	}
 }
 
 void allyact() {
-	dam = part.stat[1];
+	dam = part.stat[2];
 	int diff = dam * 20 / 100;
 	dam = (dam-diff) + rand() % (int)((dam+diff)-(dam-diff)+1);
 	text.resize(0);
@@ -680,7 +712,7 @@ void allyact() {
 		} else if(dodge != 10) {
 			//Reduce damage by enemy defense, but keep above 0
 			dam = std::max(-1, dam-now.stat[2]);
-			now.stat[0] -= dam;
+			now.stat[1] -= dam;
 			clean();
 			if(dam >= 1) {
 				tempstr = part.info[0] + " dealt " + std::to_string(dam) + " damage to the " + now.info[0] + "!";
@@ -690,7 +722,7 @@ void allyact() {
 			}
 		}
 
-		if(now.stat[0] < 1) {
+		if(now.stat[1] < 1) {
 			enemydefeat();
 		} else {
 			enemyact();
@@ -714,7 +746,7 @@ void uspell() {
 		if(plr.buff[intup] == true)
 			//Int buff adds extra 40% to magic attacks
 			dam += (2*diff);
-		now.stat[0] -= dam;
+		now.stat[1] -= dam;
 		tempstr = "You dealt " + std::to_string(dam) + " to the " + now.info[0] + "!";
 		queue.push_back("You dealt " + std::to_string(dam) + " to the " + now.info[0] + "!");
 		didSpell = 1;
@@ -730,7 +762,7 @@ void uspell() {
 		if(plr.buff[intup] == true)
 			//Int buff adds extra 40% to magic attacks
 			dam += (2*diff);
-		now.stat[0] -= dam;
+		now.stat[1] -= dam;
 		tempstr = "You dealt " + std::to_string(dam) + " to the " + now.info[0] + "!";
 		queue.push_back("You dealt " + std::to_string(dam) + " to the " + now.info[0] + "!");
 		didSpell = 1;
@@ -746,7 +778,7 @@ void uspell() {
 		if(plr.buff[intup] == true)
 			//Int buff adds extra 40% to magic attacks
 			dam += (2*diff);
-		now.stat[0] -= dam;
+		now.stat[1] -= dam;
 		tempstr = "You dealt " + std::to_string(dam) + " to the " + now.info[0] + "!";
 		queue.push_back("You dealt " + std::to_string(dam) + " to the " + now.info[0] + "!");
 		didSpell = 1;
@@ -762,7 +794,7 @@ void uspell() {
 		if(plr.buff[intup] == true)
 			//Int buff adds extra 40% to magic attacks
 			dam += (2*diff);
-		now.stat[0] -= dam;
+		now.stat[1] -= dam;
 		tempstr = "You dealt " + std::to_string(dam) + " to the " + now.info[0] + "!";
 		queue.push_back("You dealt " + std::to_string(dam) + " to the " + now.info[0] + "!");
 		didSpell = 1;
@@ -785,7 +817,7 @@ void uspell() {
 		queue.push_back("You don't have that spell!");
 	}
 
-	if(now.stat[0] < 1) {
+	if(now.stat[1] < 1) {
 		enemydefeat();
 	} else {
 		if(didSpell == 1) {
@@ -830,7 +862,7 @@ int cmenu(int set, std::vector<std::string> text) {
 	}
 
 	WINDOW *wmenu = newwin(7, 100, 11, 0);
-	WINDOW *info = newwin(8, 70, 0, 0);
+	WINDOW *info = newwin(9, 70, 0, 0);
 	WINDOW *user = newwin(11, 25, 1, (col * 4 / 5));
 	WINDOW *wpart = newwin(10, 25, 1, (col * 3 / 5));
 
@@ -855,30 +887,16 @@ int cmenu(int set, std::vector<std::string> text) {
 		menu = new_menu((ITEM **)items);
 	}
 	if(set == 42) {
-		queue.push_back(mapa[ypos][xpos]);
 		//"North", "South", "East", "West"
-		n_choices = 0;
-		if(mapa[ypos+1][xpos] != "") {
-			n_choices++;}
-		if(mapa[ypos-1][xpos] != "") {
-			n_choices++;}
-		if(mapa[ypos][xpos+1] != "") {
-			n_choices++;}
-		if(mapa[ypos][xpos-1] != "") {
-			n_choices++;}
+		n_choices = 4;
 		items = (ITEM **)calloc(n_choices + 1, sizeof(ITEM *));
-		i=0;
-		if(mapa[ypos+1][xpos] != ""){
-			items[i] = new_item("North", "");i++;}
+		items[0] = new_item("North", "");
 
-		if(mapa[ypos-1][xpos] != "") {
-			items[i] = new_item("South", "");i++;}
+		items[1] = new_item("South", "");
 
-		if(mapa[ypos][xpos-1] != "") {
-			items[i] = new_item("East", "");i++;}
+		items[2] = new_item("East", "");
 
-		if(mapa[ypos][xpos+1] != "") {
-			items[i] = new_item("West", "");}
+		items[3] = new_item("West", "");
 
 		items[n_choices] = (ITEM *)NULL;
 		menu = new_menu((ITEM **)items);
@@ -901,31 +919,24 @@ int cmenu(int set, std::vector<std::string> text) {
 	refresh();
 	wrefresh(info);
 	wrefresh(user);
-	if(set != 42) {
-		for(i=0; i < text.size(); i++) {
-			std::string str = text[i];
-			prints(str);
-		}
-	}
-	if(set == 42) {
-		if(test != "") {
-			std::string asdf = text[0];
-			mvwprintw(stdscr, 9, 1, asdf.c_str());
-			refresh();
-		}
+
+	for(i=0; i < text.size(); i++) {
+		std::string str = text[i];
+		prints(str);
 	}
 	for(i=0; i < queue.size(); i++) {
 		std::string str = queue[i];
 		prints(str);
 	}
+
 	if(part.info[0] != "") {
 		wborder(wpart, 0, 0, 0, 0, 0, 0, 0, 0);
 		wrefresh(wpart);
 		mvprintw(0, col * 3 / 5, (part.info[0] + ":").c_str());
-		printp("HP: " + std::to_string(part.stat[0]));
-		printp("Attack: " + std::to_string(part.stat[1]));
-		printp("Defense: " + std::to_string(part.stat[2]));
-		printp("Agility: " + std::to_string(part.stat[3]));
+		printp("HP: " + std::to_string(part.stat[1]));
+		printp("Attack: " + std::to_string(part.stat[2]));
+		printp("Defense: " + std::to_string(part.stat[3]));
+		printp("Agility: " + std::to_string(part.stat[4]));
 		printp("");
 		printp("Level: " + std::to_string(part.xp[2]));
 		printp("EXP: " + std::to_string(part.xp[0]) + "/" + std::to_string(part.xp[1]));
@@ -1084,18 +1095,50 @@ int cmenu(int set, std::vector<std::string> text) {
 }
 
 void map() {
+	text.resize(0);
+	text.push_back(mapa[ypos][xpos]);
+	text.push_back("");
+	text.push_back("North- " + mapinfo[ypos+1][xpos]);
+	text.push_back("South- " + mapinfo[ypos-1][xpos]);
+	text.push_back("East- " + mapinfo[ypos][xpos-1]);
+	text.push_back("West- " + mapinfo[ypos][xpos+1]);
 	usr = cmenu(42, text);
 	if(usr == -1) {
 		mainm();
 	}
+
 	if(test == "North") {
-		ypos++; text.resize(0); text.push_back("You came here from the south"); lastdir = "south";}
+		if(mapa[ypos+1][xpos] != "") {
+			ypos++;
+			lastdir = "south";
+		} else {
+			queue.push_back("You can't go that way!");
+		}
+	}
 	if(test == "South") {
-		ypos--; text.resize(0); text.push_back("You came here from the north"); lastdir = "north";}
+		if(mapa[ypos-1][xpos] != "") {
+			ypos--;
+			lastdir = "north";
+		} else {
+			queue.push_back("You can't go that way!");
+		}
+	}
 	if(test == "East") {
-		xpos--; text.resize(0); text.push_back("You came here from the west"); lastdir = "west";}
+		if(mapa[ypos][xpos-1] != "") {
+			xpos--;
+			lastdir = "west";
+		} else {
+			queue.push_back("You can't go that way!");
+		}
+	}
 	if(test == "West") {
-		xpos++; text.resize(0); text.push_back("You came here from the east"); lastdir = "east";}
+		if(mapa[ypos][xpos+1] != "") {
+			xpos++;
+			lastdir = "east";
+		} else {
+			queue.push_back("You can't go that way!");
+		}
+	}
 
 	map();
 }
