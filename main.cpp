@@ -73,7 +73,18 @@ std::string mapinfo[10][10] = {
 void clean() {
 	//TO-DO: figure out a better alternative to this
 	if(scrn==true) {
-		erase();
+		for(i = 0; i < lines; i++) {
+			wmove(info, lines, 0);
+			clrtoeol();
+		}
+		for(i = 0; i < ulines; i++) {
+			wmove(user, ulines, 0);
+			clrtoeol();
+		}
+		for(i = 0; i < plines; i++) {
+			wmove(wpart, plines, 0);
+			clrtoeol();
+		}
 	}
 	lines = 0;
 	ulines = 0;
@@ -81,6 +92,7 @@ void clean() {
 }
 
 int main() {
+	curs_set(FALSE);
 	player plr ={{"Player"}, {25, 25, 7, 1, 2, 15, 10}, {0, 20, 1, 10}};
 	xpos = 1;
 	ypos = 2;
@@ -127,9 +139,10 @@ int main() {
 	}
 	initscr();
 	signal(SIGWINCH, NULL);
-	prints("This is the remake of the original Kazoo Quest.");
-	prints("This is a alpha build- expect there to be bugs.");
-	prints("Press any key to continue.");
+	werase(stdscr);
+	mvprintw(1, 1, "This is the remake of the original Kazoo Quest.");
+	mvprintw(2, 1, "This is a alpha build- expect there to be bugs.");
+	mvprintw(3, 1, "Press any key to continue.");
 	getch();
 	pages = 3;
 	endwin();
@@ -147,7 +160,7 @@ void help() {
 	prints("Pressing shift + s saves the game.");
 	prints("");
 	prints("Press any key to close this screen");
-	getch();
+	wgetch(wmenu);
 	clean();
 	if(fmenu == 0)
 		main();
@@ -218,7 +231,8 @@ void save() {
 			file << pverne.skill[i] << ",";
 	}
 	file.close();
-	prints("Game saved!");
+	printi("Game saved!");
+	wrefresh(info);
 }
 
 void load() {
@@ -326,7 +340,6 @@ void mainm() {
 	text.push_back("Select a thing:");
 	usr = cmenu(0, text);
 	if(usr == 1) {
-		clean();
 		battle();
 	}
 	if(usr == 2) {
@@ -410,36 +423,21 @@ void battle() {
 }
 
 void printu(std::string text) {
-	move(ulines+2, (col * 4 / 5) + 1);
-	printw(text.c_str());
+	//mvwprintw(user, ulines + 1, 1, text.c_str());
+	mvwprintw(user, ulines + 1, 1, text.c_str());
 	++ulines;
-	wrefresh(stdscr);
-	refresh();
-	wborder(user, 1, 1, 1, 1, 0, 0, 0, 0);
-	refresh();
-	wrefresh(user);
 }
 void printp(std::string text) {
-	move(plines+2, (col * 3 / 5) + 1);
-	printw(text.c_str());
+	mvwprintw(wpart, plines + 1, 1, text.c_str());
 	++plines;
-	wrefresh(stdscr);
-	refresh();
-	wborder(wpart, 1, 1, 1, 1, 0, 0, 0, 0);
-	refresh();
-	wrefresh(wpart);
 }
 void prints(std::string text) {
-	mvwprintw(stdscr, lines + 1, 1, text.c_str());
+	mvwprintw(info, lines + 1, 1, text.c_str());
 	++lines;
-	refresh();
-	wrefresh(stdscr);
 }
 void printi(std::string text) {
-	mvwprintw(stdscr, lines + 1, 1, text.c_str());
+	mvwprintw(info, lines + 1, 1, text.c_str());
 	++lines;
-	refresh();
-	wrefresh(stdscr);
 }
 
 void makeitems(int set) {
@@ -642,14 +640,14 @@ void enemydefeat() {
 	queue.push_back("You gained " + std::to_string(xp) + " xp!");
 	glevel();
 
-	WINDOW *info = newwin(8, 70, 0, 0);
-	refresh();
-	wborder(info, 0, 0, 0, 0, 0, 0, 0, 0);
-	wrefresh(info);
 	for(i=0; i < queue.size(); i++) {
 		std::string str = queue[i];
 		printi(str);
 	}
+	erase();
+	box(info, 0, 0);
+	refresh();
+	wrefresh(info);
 	getch();
 	queue.clear();
 	queue.shrink_to_fit();
@@ -870,7 +868,7 @@ void death() {
 	for(i=0; i < n_choices + 1; i++) {
 		free_item(items[i]);
 	}
-	getch();
+	wgetch(wmenu);
 	free_menu(menu);
 	clean();
 	delwin(wmenu);
@@ -889,15 +887,15 @@ int cmenu(int set, std::vector<std::string> text) {
 		scrn=true;
 		cbreak();
 		noecho();
-		keypad(stdscr, TRUE);
 		refresh();
 	}
 
-	WINDOW *wmenu = newwin(7, 100, 11, 0);
-	WINDOW *info = newwin(9, 70, 0, 0);
-	WINDOW *user = newwin(11, 25, 1, (col * 4 / 5));
-	WINDOW *wpart = newwin(10, 25, 1, (col * 3 / 5));
-
+	wmenu = newwin(7, 100, 11, 0);
+	info = newwin(9, 70, 0, 0);
+	user = newwin(11, 25, 1, (col * 4 / 5));
+	wpart = newwin(10, 25, 1, (col * 3 / 5));
+	refresh();
+	keypad(wmenu, TRUE);
 	//Isn't inventory call
 	if(set != 100) {
 		n_choices = c_choices[set];
@@ -923,11 +921,8 @@ int cmenu(int set, std::vector<std::string> text) {
 		n_choices = 4;
 		items = (ITEM **)calloc(n_choices + 1, sizeof(ITEM *));
 		items[0] = new_item("North", "");
-
 		items[1] = new_item("South", "");
-
 		items[2] = new_item("East", "");
-
 		items[3] = new_item("West", "");
 
 		items[n_choices] = (ITEM *)NULL;
@@ -945,13 +940,6 @@ int cmenu(int set, std::vector<std::string> text) {
 	set_menu_sub(menu, derwin(wmenu, 5, 70, 5, 0));
 	set_menu_mark(menu, " > ");
 
-	werase(stdscr);
-	wborder(info, 0, 0, 0, 0, 0, 0, 0, 0);
-	wborder(user, 0, 0, 0, 0, 0, 0, 0, 0);
-	refresh();
-	wrefresh(info);
-	wrefresh(user);
-
 	for(i=0; i < text.size(); i++) {
 		std::string str = text[i];
 		prints(str);
@@ -960,11 +948,11 @@ int cmenu(int set, std::vector<std::string> text) {
 		std::string str = queue[i];
 		prints(str);
 	}
-
+	box(info, 0, 0);
 	if(part.info[0] != "") {
-		wborder(wpart, 0, 0, 0, 0, 0, 0, 0, 0);
-		wrefresh(wpart);
-		mvprintw(0, col * 3 / 5, (part.info[0] + ":").c_str());
+		box(wpart, 0, 0);
+		mvprintw(0, (col * 3 / 5) + 1, (part.info[0] + ":").c_str());
+		wmove(wpart, 0, 0);
 		printp("HP: " + std::to_string(part.stat[1]));
 		printp("Attack: " + std::to_string(part.stat[2]));
 		printp("Defense: " + std::to_string(part.stat[3]));
@@ -972,10 +960,11 @@ int cmenu(int set, std::vector<std::string> text) {
 		printp("");
 		printp("Level: " + std::to_string(part.xp[2]));
 		printp("EXP: " + std::to_string(part.xp[0]) + "/" + std::to_string(part.xp[1]));
-		refresh();
+		wmove(wpart, 0, 0);
 	}
 	if(noi == 0) {
-		mvprintw(0, col * 4 / 5, (plr.name[0] + ":").c_str());
+		box(user, 0, 0);
+		mvprintw(0, (col * 4 / 5) + 1, (plr.name[0] + ":").c_str());
 		printu("HP: " + std::to_string(plr.stat[1]));
 		printu("Mana: " + std::to_string(plr.stat[5]));
 		printu("Attack: " + std::to_string(plr.stat[2]));
@@ -985,12 +974,10 @@ int cmenu(int set, std::vector<std::string> text) {
 		printu("");
 		printu("Level: " + std::to_string(plr.xp[2]));
 		printu("EXP: " + std::to_string(plr.xp[0]) + "/" + std::to_string(plr.xp[1]));
+		wmove(user, 0, 0);
 	}
-	refresh();
 	post_menu(menu);
-	wrefresh(wmenu);
 	set_escdelay(25);
-	move(11, 0);
 	mvprintw(28, 1, "%d, %d", (highlight + (page*5)), page);
 	mvprintw(28, 100, "Press \"?\" for help");
 	if(set == 100) {
@@ -1005,10 +992,17 @@ int cmenu(int set, std::vector<std::string> text) {
 			refresh();
 		}
 	}
-	move(11, 0);
 	refresh();
-
-	while((c = getch())){
+	wrefresh(wmenu);
+	wmove(wmenu, 0, 0);
+	wrefresh(info);
+	wmove(info, 0, 0);
+	wrefresh(user);
+	wmove(user, 0, 0);
+	wrefresh(wpart);
+	wmove(wpart, 0, 0);
+	move(11, 0);
+	while((c = wgetch(wmenu))){
 		switch(c) {
 			//If user presses up arrow
 			case KEY_UP:
@@ -1019,6 +1013,7 @@ int cmenu(int set, std::vector<std::string> text) {
 				menu_driver(menu, REQ_UP_ITEM);
 				mvprintw(28, 1, "%d, %d", (highlight + (page*5)), page);
 				refresh();
+				wrefresh(wmenu);
 				break;
 			//If user presses down arrow
 			case KEY_DOWN:
@@ -1028,8 +1023,9 @@ int cmenu(int set, std::vector<std::string> text) {
 					++highlight;
 				}
 				mvprintw(28, 1, "%d, %d", (highlight + (page*5)), page);
-				refresh();
 				menu_driver(menu, REQ_DOWN_ITEM);
+				refresh();
+				wrefresh(wmenu);
 				break;
 			case KEY_RIGHT:
 				if(set == 100) {
@@ -1080,7 +1076,7 @@ int cmenu(int set, std::vector<std::string> text) {
 			//If user presses control key
 			case BUTTON_CTRL:
 				//This is beautiful, works like a charm :)
-				while((t = getch())) {
+				while((t = wgetch(wmenu))) {
 					switch(t) {
 						case 99:
 							system("clear");
@@ -1095,6 +1091,7 @@ int cmenu(int set, std::vector<std::string> text) {
 							wrefresh(wmenu);
 							break;
 					}
+					refresh();
 					wrefresh(wmenu);
 				}
 				if(t != 0) {
@@ -1107,6 +1104,7 @@ int cmenu(int set, std::vector<std::string> text) {
 				wrefresh(wmenu);
 				break;
 		}
+		refresh();
 		wrefresh(wmenu);
 	if(ch != 0)
 		break;

@@ -8,8 +8,6 @@
 #ifndef MAP_H_
 #define MAP_H_
 
-wchar_t bread = 127838;
-
 #include <string>
 using namespace std;
 

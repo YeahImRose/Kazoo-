@@ -111,58 +111,7 @@ enum spellEnum {
 	lheal=13
 };
 
-//Setting colors for different OS's
-#ifdef _WIN32
-#error "UNSPPORTED SYSTEM!"
-#elif __APPLE__
-enum colors {
-	black=0,
-	crimson=1,
-	dgreen=2,
-	dyellow=3,
-	dblue=4,
-	dmagenta=5,
-	dcyan=6,
-	dwhite=7,
-	gray=8,
-	red=9,
-	green=10,
-	yellow=11,
-	blue=12,
-	magenta=13,
-	cyan=14,
-	white=15,
-	orange=202,
-	pink=201,
-	deepblue=21,
-	purple=93
-};
-#elif __linux__
-enum colors {
-	black=0,
-	dred=1,
-	dgreen=2,
-	dyellow=3,
-	dblue=4,
-	dmagenta=5,
-	dcyan=6,
-	dwhite=7,
-	gray=8,
-	red=9,
-	green=10,
-	yellow=11,
-	blue=12,
-	magenta=13,
-	cyan=14,
-	white=15,
-	orange=202,
-	pink=201,
-	deepblue=21,
-	purple=93
-};
-#else
-#error "Unknown compiler"
-#endif
+//Reminder to set colors for different OS's here
 
 int cmenu(int, std::vector<std::string>);
 void uspell();
