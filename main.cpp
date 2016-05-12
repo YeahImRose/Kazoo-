@@ -152,7 +152,7 @@ int main() {
 }
 
 void help() {
-	clean();
+	erase();
 	prints("Use the Up/Down arrow keys to navigate menus.");
 	prints("Use the Left/Right arrow keys to switch between menu pages.");
 	prints("Press escape to exit out of some menus(for example, the inventory).");
@@ -160,8 +160,10 @@ void help() {
 	prints("Pressing shift + s saves the game.");
 	prints("");
 	prints("Press any key to close this screen");
-	wgetch(wmenu);
-	clean();
+	refresh();
+	wrefresh(info);
+	getch();
+	erase();
 	if(fmenu == 0)
 		main();
 	if(fmenu == 1)
@@ -639,12 +641,12 @@ void enemydefeat() {
 	}
 	queue.push_back("You gained " + std::to_string(xp) + " xp!");
 	glevel();
-
+	werase(info);
+	erase();
 	for(i=0; i < queue.size(); i++) {
 		std::string str = queue[i];
 		printi(str);
 	}
-	erase();
 	box(info, 0, 0);
 	refresh();
 	wrefresh(info);
