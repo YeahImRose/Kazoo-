@@ -12,6 +12,8 @@ WINDOW *wmenu;
 WINDOW *info;
 WINDOW *user;
 WINDOW *wpart;
+WINDOW *arrows;
+WINDOW *pname;
 
 std::string test;
 int c_choices[10] = {6, 4, 5, 7, 4, 3, 2, 0, 0, 2};
@@ -454,6 +456,8 @@ void makeitems(int set) {
 }
 
 void inv() {
+	wmove(wmenu, 0, 0);
+	wclrtoeol(wmenu);
 	refresh();
 	text.resize(0);
 	text.push_back("Select item:");
@@ -891,11 +895,12 @@ int cmenu(int set, std::vector<std::string> text) {
 		noecho();
 		refresh();
 	}
-
+	arrows = newwin(2, 25, 9, 0);
 	wmenu = newwin(7, 100, 11, 0);
 	info = newwin(9, 70, 0, 0);
 	user = newwin(11, 25, 1, (col * 4 / 5));
 	wpart = newwin(10, 25, 1, (col * 3 / 5));
+	pname = newwin(1, 20, 0, (col * 3 / 5));
 	refresh();
 	keypad(wmenu, TRUE);
 	//Isn't inventory call
@@ -953,7 +958,7 @@ int cmenu(int set, std::vector<std::string> text) {
 	box(info, 0, 0);
 	if(part.info[0] != "") {
 		box(wpart, 0, 0);
-		mvprintw(0, (col * 3 / 5) + 1, (part.info[0] + ":").c_str());
+		wprintw(pname, (part.info[0] + ":").c_str());
 		wmove(wpart, 0, 0);
 		printp("HP: " + std::to_string(part.stat[1]));
 		printp("Attack: " + std::to_string(part.stat[2]));
@@ -983,19 +988,18 @@ int cmenu(int set, std::vector<std::string> text) {
 	mvprintw(28, 1, "%d, %d", (highlight + (page*5)), page);
 	mvprintw(28, 100, "Press \"?\" for help");
 	if(set == 100) {
+		werase(arrows);
 		if(page == 0) {
-			mvprintw(9, 20, "--->");
-			refresh();
+			mvwprintw(arrows, 0, 20, "--->");
 		} else if(page == pages) {
-			mvprintw(9, 3, "<---");
-			refresh();
+			mvwprintw(arrows, 0, 3, "<---");
 		} else {
-			mvprintw(9, 3, "<---             --->");
-			refresh();
+			mvwprintw(arrows, 0, 3, "<---             --->");
 		}
 	}
 	refresh();
 	wrefresh(wmenu);
+	wrefresh(arrows);
 	wmove(wmenu, 0, 0);
 	wrefresh(info);
 	wmove(info, 0, 0);
@@ -1003,6 +1007,8 @@ int cmenu(int set, std::vector<std::string> text) {
 	wmove(user, 0, 0);
 	wrefresh(wpart);
 	wmove(wpart, 0, 0);
+	wrefresh(pname);
+	wmove(pname, 0, 0);
 	move(11, 0);
 	while((c = wgetch(wmenu))){
 		switch(c) {
