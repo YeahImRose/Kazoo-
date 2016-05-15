@@ -2,9 +2,36 @@
 #include "map.h"
 #include "enemies.h"
 #include "allies.h"
+#include <SDL2/SDL.h>
+
+#ifdef _WIN32
+	#define os 1
+#endif
+#ifdef __APPLE__
+	#include <mach-o/dyld.h>
+	#define os 2
+#endif
+
+#include <string>
+#include <iostream>
+using namespace std;
 
 #define row 30
 #define col 125
+
+void audio_callback(void *userdata, Uint8 *stream, int len);
+static Uint8 *audio_pos; // global pointer to the audio buffer to be played
+static Uint32 audio_len; // remaining length of the sample we have to play
+static Uint32 wav_length; // length of our sample
+static Uint8 *wav_buffer; // buffer containing our audio file
+static SDL_AudioSpec wav_spec; // the specs of our piece of music
+bool isAudio = false;
+
+std::thread lvlups;
+int newg = 0;
+int savechecked = 0, savechecked1 = 0;
+
+std::string dir;
 
 MENU *menu;
 ITEM **items;
@@ -47,11 +74,12 @@ std::string inventory[][5] = {
 		{"Honking Book", "MLG Book", "Fab Book", "Debug Book", "Kappa Book"},
 		{"Book Book", "Histoire's Tome/Book", "Imaginary Book", "Frozen Book", "THE BOOK"},
 		{"Picture Book", "Coloring Book", "Hardcover Book", "Mak Book", "Biilbe"},
-		{},
+		{"Extra 1", "Extra 2", "Extra 3", "Extra 4", "Extra 5"},
 		{"   A simple book", "   Another simple book", "   You don't know where this came from", "   The cover shows an eagle flying over thousands of tanks", "   It's just a piece of paper"},
 		{"   A mysterious honking is always emitted from this book", "   A book that is 2 1337 4 u", "   The fab levels of this book are beyond comprehension", "   A book that kills bugs- a programmers dream", "   A book full of the greatest memes in history"},
 		{"   A book-ish book", "   How did this get here?", "   The book you wanted to write but couldn't be bothered to", "   Might do something special!", "   The only book"},
-		{"   A book for young childrens", "   A book for da colors", "   Might hurt if you hit yourself with it", "   A non-copyrighted book", "   A famous religious book"}
+		{"   A book for young childrens", "   A book for da colors", "   Might hurt if you hit yourself with it", "   A non-copyrighted book", "   A famous religious book"},
+		{" ", " ", " ", " ", " "}
 };
 
 std::string mapa[10][10] = {
@@ -71,6 +99,25 @@ std::string mapinfo[10][10] = {
 		{"Nothing", "Nothing", "Nothing", "Nothing", "Nothing", "Nothing", "Nothing", "Nothing", "Nothing", "Nothing"},
 		{"Nothing", "Nothing", "Nothing", "Nothing", "Nothing", "Nothing", "Nothing", "Nothing", "Nothing", "Nothing"}
 };
+
+int kbhit(void)
+{	int ch = getch();
+    if (ch != ERR) {
+        ungetch(ch);
+        return 1;
+    } else {
+        return 0;}}
+
+void checkaudio() {
+	if( audio_len > 0 ) {
+		SDL_Delay(100);
+	}
+	if(audio_len == 0 && isAudio == true) {
+		SDL_CloseAudio();
+		SDL_FreeWAV(wav_buffer);
+		isAudio = false;
+	}
+}
 
 void clean() {
 	//TO-DO: figure out a better alternative to this
@@ -93,19 +140,96 @@ void clean() {
 	plines = 0;
 }
 
-int main() {
-	curs_set(FALSE);
-	player plr ={{"Player"}, {25, 25, 7, 1, 2, 15, 10}, {0, 20, 1, 10}};
-	xpos = 1;
-	ypos = 2;
-	using namespace std;
-	int newg = 0;
-	system("printf '\e[8;30;125t'");
-	plr.spell[firebolt] = 1;
-	plr.spell[lfirebolt] = 1; plr.spell[lfrost] = 1; plr.spell[lbolt] = 1; plr.spell[lquake] = 1;
-	plr.spell[lpoison] = 1; plr.spell[llifesteal] = 1; plr.spell[lheal] = 1;
-	system("clear");
-	if (FILE *file = fopen("savegame", "r")) {
+void modcheck() {
+	//Need to fix this- will always be true
+	if (dir != "") {
+		text.resize(0);
+		text.push_back("Would you like to enable your mods?");
+		noi = 1;
+		usr = cmenu(9, text);
+		if(usr == 1) {
+			modon = true;
+		}
+		if(usr == 2) {
+			modon = false;
+		}
+		noi = 0;
+	}
+	if(modon == true) {
+		int total = -1;
+		std::string line;
+		std::ifstream file;
+		file.open((dir + "Mods/extra").c_str());
+
+		if(!file.is_open()) {
+			perror("Error opening mod");
+		}
+		std::string data[1000];
+		int r = 0;
+		while(getline(file, line, ',')) {
+			data[r] = line;
+			r++;
+		}
+		for(i=0; i < 3; i++){
+			total++;
+			e0.info[i] = data[total];}
+		for(i=0;i < 5; i++){
+			total++;
+			e0.stat[i] = std::stoi(data[total]);}
+		for(i=0; i < 4; i++){
+			total++;
+			e0.xp[i] = std::stoi(data[total]);}
+		for(i=0; i < 2; i++){
+			total++;
+			e0.skill[i] = std::stoi(data[total]);}
+		if(r > 20) {
+			for(i=0; i < 3; i++){
+				total++;
+				e1.info[i] = data[total];}
+			for(i=0;i < 5; i++){
+				total++;
+				e1.stat[i] = std::stoi(data[total]);}
+			for(i=0; i < 4; i++){
+				total++;
+				e1.xp[i] = std::stoi(data[total]);}
+			for(i=0; i < 2; i++){
+				total++;
+				e1.skill[i] = std::stoi(data[total]);}
+		}
+		file.close();
+	}
+	usr = 0;
+	modchecked = 1;
+}
+
+void getname() {
+	if(newg == 1) {
+		erase();
+		system("clear");
+		move(1, 0);
+		endwin();
+		pprime = prime;
+		pchen = chen;
+		pverne = verne;
+		cout << "What is your name?(Max 16 characters)\n";
+		std::string in;
+		getline(cin, in);
+		if(in == "llama") {
+			exit(EXIT_SUCCESS);}
+		if(in == "Llama") {
+			exit(EXIT_SUCCESS);}
+		if(in.length() > 16) {
+			cout << "Name too long!\n";
+			getname();
+		} else if(in != "") {
+			plr.name[0] = in;
+			savechecked1 = 1;
+		}
+	}
+}
+
+void savecheck() {
+	if (FILE *file = fopen((dir + "Saves/savegame").c_str(), "r")) {
 		fclose(file);
 		text.resize(0);
 		text.push_back("Would you like to load your save?");
@@ -121,23 +245,39 @@ int main() {
 		newg = 1;
 	}
 	if(newg == 1) {
-		erase();
-		system("clear");
-		move(1, 0);
-		endwin();
-		pprime = prime;
-		pchen = chen;
-		pverne = verne;
-		cout << "What is your name?(Max 16 characters)\n";
-		getline(cin, plr.name[0]);
-		if(plr.name[0] == "llama")
-			exit(EXIT_SUCCESS);
-		if(plr.name[0] == "Llama")
-			exit(EXIT_SUCCESS);
-		if(plr.name[0].length() > 16) {
-			cout << "Name too long!\n";
-			main();
-		}
+		if(savechecked1 == 0) {
+			getname();}
+	}
+	savechecked = 1;
+}
+
+void getdir() {
+	if(os == 2) {
+		char path[1024];
+		uint32_t size = sizeof(path);
+		if (_NSGetExecutablePath(path, &size) == 0)
+			dir = path;
+	}
+	dir = dir.substr(0, dir.size()-18);
+}
+
+int main() {
+	getdir();
+	part = noally;
+	curs_set(FALSE);
+	xpos = 1;
+	ypos = 2;
+	using namespace std;
+	system("printf '\e[8;30;125t'");
+	plr.spell[firebolt] = 1;
+	plr.spell[lfirebolt] = 1; plr.spell[lfrost] = 1; plr.spell[lbolt] = 1; plr.spell[lquake] = 1;
+	plr.spell[lpoison] = 1; plr.spell[llifesteal] = 1; plr.spell[lheal] = 1;
+	system("clear");
+	if(modchecked == 0) {
+		modcheck();
+	}
+	if(savechecked == 0) {
+		savecheck();
 	}
 	initscr();
 	signal(SIGWINCH, NULL);
@@ -146,7 +286,7 @@ int main() {
 	mvprintw(2, 1, "This is a alpha build- expect there to be bugs.");
 	mvprintw(3, 1, "Press any key to continue.");
 	getch();
-	pages = 3;
+	pages = 4;
 	endwin();
 	system("clear");
 	text.resize(0);
@@ -183,11 +323,11 @@ void help() {
 void save() {
 	//Clear save file
 	std::ofstream ofs;
-	ofs.open("savegame", std::ofstream::out | std::ofstream::trunc);
+	ofs.open((dir + "Saves/savegame").c_str(), std::ofstream::out | std::ofstream::trunc);
 	ofs.close();
 
 	std::ofstream file;
-	file.open("savegame");
+	file.open((dir + "Saves/savegame").c_str());
 	file << haspart << ",";
 	file << plr.name[0] << ",";
 	for(i=0;i < 7; i++)
@@ -197,52 +337,51 @@ void save() {
 	for(i=0; i < 8; i++)
 		file << plr.spell[i] << ",";
 
-	if(haspart == 1) {
-		for(i=0; i < 3; i++)
-			file << part.info[i] << ",";
-		for(i=0;i < 5; i++)
-			file << part.stat[i] << ",";
-		for(i=0; i < 4; i++)
-			file << part.xp[i] << ",";
-		for(i=0; i < 2; i++)
-			file << part.skill[i] << ",";
+	for(i=0; i < 3; i++)
+		file << part.info[i] << ",";
+	for(i=0;i < 5; i++)
+		file << part.stat[i] << ",";
+	for(i=0; i < 4; i++)
+		file << part.xp[i] << ",";
+	for(i=0; i < 2; i++)
+		file << part.skill[i] << ",";
+	//Always save these since they will always exist
+	for(i=0; i < 3; i++)
+		file << pprime.info[i] << ",";
+	for(i=0;i < 5; i++)
+		file << pprime.stat[i] << ",";
+	for(i=0; i < 4; i++)
+		file << pprime.xp[i] << ",";
+	for(i=0; i < 2; i++)
+		file << pprime.skill[i] << ",";
 
-		for(i=0; i < 3; i++)
-			file << pprime.info[i] << ",";
-		for(i=0;i < 5; i++)
-			file << pprime.stat[i] << ",";
-		for(i=0; i < 4; i++)
-			file << pprime.xp[i] << ",";
-		for(i=0; i < 2; i++)
-			file << pprime.skill[i] << ",";
+	for(i=0; i < 3; i++)
+		file << pchen.info[i] << ",";
+	for(i=0;i < 5; i++)
+		file << pchen.stat[i] << ",";
+	for(i=0; i < 4; i++)
+		file << pchen.xp[i] << ",";
+	for(i=0; i < 2; i++)
+		file << pchen.skill[i] << ",";
 
-		for(i=0; i < 3; i++)
-			file << pchen.info[i] << ",";
-		for(i=0;i < 5; i++)
-			file << pchen.stat[i] << ",";
-		for(i=0; i < 4; i++)
-			file << pchen.xp[i] << ",";
-		for(i=0; i < 2; i++)
-			file << pchen.skill[i] << ",";
+	for(i=0; i < 3; i++)
+		file << pverne.info[i] << ",";
+	for(i=0;i < 5; i++)
+		file << pverne.stat[i] << ",";
+	for(i=0; i < 4; i++)
+		file << pverne.xp[i] << ",";
+	for(i=0; i < 2; i++)
+		file << pverne.skill[i] << ",";
 
-		for(i=0; i < 3; i++)
-			file << pverne.info[i] << ",";
-		for(i=0;i < 5; i++)
-			file << pverne.stat[i] << ",";
-		for(i=0; i < 4; i++)
-			file << pverne.xp[i] << ",";
-		for(i=0; i < 2; i++)
-			file << pverne.skill[i] << ",";
-	}
 	file.close();
-	printi("Game saved!");
-	wrefresh(info);
+	queue.resize(0);
+	queue.push_back("Game saved!");
 }
 
 void load() {
 	std::string line;
 	std::ifstream file;
-	file.open("savegame");
+	file.open((dir + "Saves/savegame").c_str());
 
 	if(!file.is_open()) {
 		perror("Error opening save");
@@ -361,7 +500,7 @@ void mainm() {
 			text.push_back("Are you sure?");
 			usr = cmenu(9, text);
 			if(usr == 1) {
-				std::remove("savegame");
+				std::remove((dir + "Saves/savegame").c_str());
 				prints("Restarting game...");
 				main();
 			} else {
@@ -501,6 +640,46 @@ void inv() {
 		queue.push_back("Verne global when?");
 		haspart = 1;
 	}
+	if(usr == 21) {
+		if(e0.info[0] != "") {
+			keeppart();
+			part = e0;
+			queue.push_back(e0.info[1]);
+			haspart = 1;
+		}
+	}
+	if(usr == 22) {
+		if(e1.info[0] != "") {
+			keeppart();
+			part = e1;
+			queue.push_back(e1.info[1]);
+			haspart = 1;
+		}
+	}
+	if(usr == 22) {
+		if(e2.info[0] != "") {
+			keeppart();
+			part = e2;
+			queue.push_back(e2.info[1]);
+			haspart = 1;
+		}
+	}
+	if(usr == 23) {
+		if(e3.info[0] != "") {
+			keeppart();
+			part = e3;
+			queue.push_back(e3.info[1]);
+			haspart = 1;
+		}
+	}
+	if(usr == 24) {
+		if(e4.info[0] != "") {
+			keeppart();
+			part = e4;
+			queue.push_back(e4.info[1]);
+			haspart = 1;
+		}
+	}
 	//queue.push_back("Not yet implemented!");
 	prompt();
 }
@@ -573,7 +752,7 @@ void glevel() {
 
 			//Add a level
 			part.xp[2]++;
-			queue.push_back(part.info[0] + " leveled up!");
+			pup++;
 
 			//Handling decimal values
 			double temp = part.xp[2] / 2;
@@ -608,7 +787,7 @@ void glevel() {
 
 		//Add a level
 		plr.xp[2]++;
-		queue.push_back("Level up!");
+		uup++;
 
 		//Handling decimal values
 		double temp = plr.xp[2] / 2;
@@ -616,11 +795,11 @@ void glevel() {
 		plr.xp[0] = xp;
 
 		//Player stat changes will go here
-		plr.stat[0] += (plr.xp[2] * 1.5);
-		plr.stat[2] += (plr.xp[2] * 1.5);
-		plr.stat[3] += (plr.xp[2] * 1.5);
-		plr.stat[5] += (plr.xp[2] * 1.5);
-		plr.stat[6] += (plr.xp[2] * 1.5);
+		plr.stat[0] += (plr.xp[2] * 0.8);
+		plr.stat[2] += (plr.xp[2] * 0.8);
+		plr.stat[3] += (plr.xp[2] * 0.8);
+		plr.stat[5] += (plr.xp[2] * 0.8);
+		plr.stat[6] += (plr.xp[2] * 0.8);
 
 	//Gained xp wasn't enough to level up
 	} else if(xp + plr.xp[0] < plr.xp[1]) {
@@ -634,17 +813,34 @@ void glevel() {
 void enemydefeat() {
 	queue.clear();
 	queue.shrink_to_fit();
-
 	queue.push_back(tempstr);
 	queue.push_back("You defeated the " + now.info[0] + "!");
 
+	//XP gained is 120% of the enemy's max HP
 	int diff = now.stat[0] * 20 / 100;
 	int xp = now.stat[0] + diff;
 	if(part.info[0] != "") {
 		queue.push_back(part.info[0] + " gained " + std::to_string(xp) + " xp!");
 	}
 	queue.push_back("You gained " + std::to_string(xp) + " xp!");
+	pup = 0;
+	uup = 0;
+	//Call level up check
 	glevel();
+	//Pardon the weird formating
+	if(pup > 0) { if(pup > 1) {
+			queue.push_back(part.info[0] + " leveled up " + std::to_string(pup) + " times!");
+	} else if(pup == 1) {
+			queue.push_back(part.info[0] + " leveled up!");}}
+	if(uup > 0) { if(uup > 1) {
+			queue.push_back("You leveled up " + std::to_string(uup) + " times!");
+			//lvlups = std::thread(play_sound,"Sounds/count.wav");
+			play_sound("Sounds/count.wav");
+	} else if(uup == 1) {
+			queue.push_back("You leveled up!");
+			//lvlups = std::thread(play_sound,"Sounds/count.wav");
+			play_sound("Sounds/count.wav");
+	}}
 	werase(info);
 	erase();
 	for(i=0; i < queue.size(); i++) {
@@ -654,9 +850,11 @@ void enemydefeat() {
 	box(info, 0, 0);
 	refresh();
 	wrefresh(info);
+	checkaudio();
 	getch();
 	queue.clear();
 	queue.shrink_to_fit();
+	checkaudio();
 	battle();
 }
 
@@ -1022,6 +1220,7 @@ int cmenu(int set, std::vector<std::string> text) {
 				mvprintw(28, 1, "%d, %d", (highlight + (page*5)), page);
 				refresh();
 				wrefresh(wmenu);
+				checkaudio();
 				break;
 			//If user presses down arrow
 			case KEY_DOWN:
@@ -1034,6 +1233,7 @@ int cmenu(int set, std::vector<std::string> text) {
 				menu_driver(menu, REQ_DOWN_ITEM);
 				refresh();
 				wrefresh(wmenu);
+				checkaudio();
 				break;
 			case KEY_RIGHT:
 				if(set == 100) {
@@ -1110,6 +1310,7 @@ int cmenu(int set, std::vector<std::string> text) {
 				mvprintw(28, 1, "%d, %d", highlight, page);
 				refresh();
 				wrefresh(wmenu);
+				checkaudio();
 				break;
 		}
 		refresh();
@@ -1148,7 +1349,6 @@ void map() {
 	if(test == "North") {
 		if(mapa[ypos+1][xpos] != "") {
 			ypos++;
-			lastdir = "south";
 		} else {
 			queue.push_back("You can't go that way!");
 		}
@@ -1156,7 +1356,6 @@ void map() {
 	if(test == "South") {
 		if(mapa[ypos-1][xpos] != "") {
 			ypos--;
-			lastdir = "north";
 		} else {
 			queue.push_back("You can't go that way!");
 		}
@@ -1164,7 +1363,6 @@ void map() {
 	if(test == "East") {
 		if(mapa[ypos][xpos-1] != "") {
 			xpos--;
-			lastdir = "west";
 		} else {
 			queue.push_back("You can't go that way!");
 		}
@@ -1172,11 +1370,51 @@ void map() {
 	if(test == "West") {
 		if(mapa[ypos][xpos+1] != "") {
 			xpos++;
-			lastdir = "east";
 		} else {
 			queue.push_back("You can't go that way!");
 		}
 	}
 
 	map();
+}
+
+void audio_callback(void *userdata, Uint8 *stream, int len) {
+
+	if (audio_len == 0)
+		return;
+
+	len = ( len > audio_len ? audio_len : len );
+	SDL_memcpy (stream, audio_pos, len); 					// simply copy from one buffer into the other
+	SDL_MixAudio(stream, audio_pos, len, SDL_MIX_MAXVOLUME);// mix from one buffer into another
+
+	audio_pos += len;
+	audio_len -= len;
+}
+
+void play_sound(std::string MUS_PATH) {
+	if(SDL_Init(SDL_INIT_AUDIO) < 0) {
+		return;
+	}
+
+	MUS_PATH = dir.c_str() + MUS_PATH;
+	/* Load the WAV */
+	// the specs, length and buffer of our wav are filled
+	if( SDL_LoadWAV(MUS_PATH.c_str(), &wav_spec, &wav_buffer, &wav_length) == NULL ){
+		return;
+	}
+	// set the callback function
+	wav_spec.callback = audio_callback;
+	wav_spec.userdata = NULL;
+	// set our global static variables
+	audio_pos = wav_buffer; // copy sound buffer
+	audio_len = wav_length; // copy file length
+
+	/* Open the audio device */
+	if ( SDL_OpenAudio(&wav_spec, NULL) < 0 ){
+	  fprintf(stderr, "Couldn't open audio: %s\n", SDL_GetError());
+	}
+
+	/* Start playing */
+	SDL_PauseAudio(0);
+	isAudio = true;
 }

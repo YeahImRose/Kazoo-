@@ -17,6 +17,7 @@
 #include <fstream>
 #include <string>
 #include <vector>
+#include <thread>
 #include <cstdlib>
 //Planning on eventually adding sounds
 #import <OpenAL/al.h>
@@ -30,12 +31,12 @@ int armor;
 //Game variables
 int points, difficulty, classsc, usr, tut_finished;
 //Battle variables
-int agil, dodge, dam, enerand, haspart = 0;
+int agil, dodge, dam, enerand;
 //Menu variables + some
 int highlight, n_choices, i, c, ch, t, noi, fmenu, xpos, ypos, pages, row, col;
-int ulines = 0, plines = 0, lines = 0;
-int page = 0;
+int ulines = 0, plines = 0, lines = 0, page = 0, pup = 0, uup = 0, modchecked = 0, haspart = 0;
 bool scrn = false;
+bool modon;
 
 std::string triggers[25];
 /*std::string yes_words [] = {"yes", "y", "true", "indeed", "yeah", "afirmative"};
@@ -45,7 +46,6 @@ std::string take_words [] = {"take", "grab", "pick", "get", "aquire", "nab", "st
 std::string use_words[] = {"use", "eat", "read", "drink", "flip", "turn", "hit"};*/
 std::string kills[100];
 std::string tempstr;
-std::string lastdir;
 std::vector<std::string> text, queue;
 
 struct player {
@@ -64,7 +64,7 @@ struct ally {
 	int skill[2]; //Has skill, skill level
 	bool buff[10]; //Regen, def up, atk up, agi up, int up, poison, def down, atk down, agi down, int down, paralysis/frozen
 	int times[10]; //Buff timers for regen, def up, atk up, agi up, int up, poison, def down, atk down, agi down, int down, paralysis/frozen
-} part, pchen, pprime, pverne;
+} part, pchen, pprime, pverne, e0, e1, e2, e3, e4;
 
 struct enemy {
 	std::string info[2]; //Name, info
@@ -85,13 +85,6 @@ enum statusBuff {
 	agidn=8,
 	intdwn=9,
 	frzn=10,
-};
-
-enum allies {
-	aprime=0,
-	anep,
-	averne,
-	achen
 };
 
 enum spellEnum {
@@ -130,11 +123,16 @@ void enemydefeat();
 void mainm();
 void keeppart();
 void save();
+void savecheck();
+void getname();
+void modcheck();
+void getdir();
 void load();
 void resize();
 void help();
 void inv();
 void makeitems(int);
 void map();
+void play_sound(std::string);
 
 #endif /* MAIN_H_ */
