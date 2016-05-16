@@ -24,6 +24,9 @@
 #import <OpenAL/alc.h>
 #import <AudioToolbox/AudioToolbox.h>
 
+#define row 30
+#define col 125
+
 //Weapon list: 0 hands, 1 branch, 2 dagger, 3 dull sword, 4 Blade Staff, 5 sharp spear, 6 polished axe, 7 The Blade of Honking
 int weapon;
 //Armor list: 0 Cloth shirt, 1 Leather Breastplate, 2 Chainmail Breastplate, 3 Scale Breastplate, 4 Crystal Breastplate, 5 Cloak of Shadows, 6 Magic Shield, 7 Kazoo Shield of Death
@@ -33,17 +36,15 @@ int points, difficulty, classsc, usr, tut_finished;
 //Battle variables
 int agil, dodge, dam, enerand;
 //Menu variables + some
-int highlight, n_choices, i, c, ch, t, noi, fmenu, xpos, ypos, pages, row, col;
-int ulines = 0, plines = 0, lines = 0, page = 0, pup = 0, uup = 0, modchecked = 0, haspart = 0;
+int highlight, n_choices, i, c, ch, t, noi, fmenu, xpos, ypos, pages;
+int ulines = 0, plines = 0, lines = 0, page = 0, pup = 0, uup = 0, modchecked = 0, haspart = 0, newg = 0, savechecked = 0, savechecked1 = 0;
+int c_choices[10] = {6, 4, 5, 7, 4, 3, 2, 0, 0, 2};
 bool scrn = false;
 bool modon;
 
+std::string dir;
 std::string triggers[25];
-/*std::string yes_words [] = {"yes", "y", "true", "indeed", "yeah", "afirmative"};
-std::string lights_words [] = {"switch", "lights", "light", "torch"};
-std::string spellbook_words [] = {"spellbook", "book", "runebook"};
-std::string take_words [] = {"take", "grab", "pick", "get", "aquire", "nab", "steal"};
-std::string use_words[] = {"use", "eat", "read", "drink", "flip", "turn", "hit"};*/
+std::string test;
 std::string kills[100];
 std::string tempstr;
 std::vector<std::string> text, queue;
@@ -107,20 +108,20 @@ enum spellEnum {
 //Reminder to set colors for different OS's here
 
 int cmenu(int, std::vector<std::string>);
-void uspell();
+void makeitems(int);
+void mainm();
 void clean();
 void battle();
-void prompt();
-void death();
-void plract(int);
-void enemyact();
-void allyact();
+void inv();
+void uspell();
 void printu(std::string);
 void printp(std::string);
 void prints(std::string);
 void printi(std::string);
+void plract(int);
+void enemyact();
+void allyact();
 void enemydefeat();
-void mainm();
 void keeppart();
 void save();
 void savecheck();
@@ -130,9 +131,11 @@ void getdir();
 void load();
 void resize();
 void help();
-void inv();
-void makeitems(int);
 void map();
+void prompt();
+void death();
 void play_sound(std::string);
+void checkaudio();
+void loadbar();
 
 #endif /* MAIN_H_ */

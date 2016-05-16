@@ -12,12 +12,7 @@
 	#define os 2
 #endif
 
-#include <string>
-#include <iostream>
 using namespace std;
-
-#define row 30
-#define col 125
 
 void audio_callback(void *userdata, Uint8 *stream, int len);
 static Uint8 *audio_pos; // global pointer to the audio buffer to be played
@@ -28,10 +23,6 @@ static SDL_AudioSpec wav_spec; // the specs of our piece of music
 bool isAudio = false;
 
 std::thread lvlups;
-int newg = 0;
-int savechecked = 0, savechecked1 = 0;
-
-std::string dir;
 
 MENU *menu;
 ITEM **items;
@@ -42,8 +33,6 @@ WINDOW *wpart;
 WINDOW *arrows;
 WINDOW *pname;
 
-std::string test;
-int c_choices[10] = {6, 4, 5, 7, 4, 3, 2, 0, 0, 2};
 player plr ={{"Player"}, {25, 25, 7, 1, 2, 15, 10}, {0, 20, 1, 10}};
 
 const char *choices[][10] = {
@@ -100,166 +89,6 @@ std::string mapinfo[10][10] = {
 		{"Nothing", "Nothing", "Nothing", "Nothing", "Nothing", "Nothing", "Nothing", "Nothing", "Nothing", "Nothing"}
 };
 
-int kbhit(void)
-{	int ch = getch();
-    if (ch != ERR) {
-        ungetch(ch);
-        return 1;
-    } else {
-        return 0;}}
-
-void checkaudio() {
-	if( audio_len > 0 ) {
-		SDL_Delay(100);
-	}
-	if(audio_len == 0 && isAudio == true) {
-		SDL_CloseAudio();
-		SDL_FreeWAV(wav_buffer);
-		isAudio = false;
-	}
-}
-
-void clean() {
-	//TO-DO: figure out a better alternative to this
-	if(scrn==true) {
-		for(i = 0; i < lines; i++) {
-			wmove(info, lines, 0);
-			clrtoeol();
-		}
-		for(i = 0; i < ulines; i++) {
-			wmove(user, ulines, 0);
-			clrtoeol();
-		}
-		for(i = 0; i < plines; i++) {
-			wmove(wpart, plines, 0);
-			clrtoeol();
-		}
-	}
-	lines = 0;
-	ulines = 0;
-	plines = 0;
-}
-
-void modcheck() {
-	//Need to fix this- will always be true
-	if (dir != "") {
-		text.resize(0);
-		text.push_back("Would you like to enable your mods?");
-		noi = 1;
-		usr = cmenu(9, text);
-		if(usr == 1) {
-			modon = true;
-		}
-		if(usr == 2) {
-			modon = false;
-		}
-		noi = 0;
-	}
-	if(modon == true) {
-		int total = -1;
-		std::string line;
-		std::ifstream file;
-		file.open((dir + "Mods/extra").c_str());
-
-		if(!file.is_open()) {
-			perror("Error opening mod");
-		}
-		std::string data[1000];
-		int r = 0;
-		while(getline(file, line, ',')) {
-			data[r] = line;
-			r++;
-		}
-		for(i=0; i < 3; i++){
-			total++;
-			e0.info[i] = data[total];}
-		for(i=0;i < 5; i++){
-			total++;
-			e0.stat[i] = std::stoi(data[total]);}
-		for(i=0; i < 4; i++){
-			total++;
-			e0.xp[i] = std::stoi(data[total]);}
-		for(i=0; i < 2; i++){
-			total++;
-			e0.skill[i] = std::stoi(data[total]);}
-		if(r > 20) {
-			for(i=0; i < 3; i++){
-				total++;
-				e1.info[i] = data[total];}
-			for(i=0;i < 5; i++){
-				total++;
-				e1.stat[i] = std::stoi(data[total]);}
-			for(i=0; i < 4; i++){
-				total++;
-				e1.xp[i] = std::stoi(data[total]);}
-			for(i=0; i < 2; i++){
-				total++;
-				e1.skill[i] = std::stoi(data[total]);}
-		}
-		file.close();
-	}
-	usr = 0;
-	modchecked = 1;
-}
-
-void getname() {
-	if(newg == 1) {
-		erase();
-		system("clear");
-		move(1, 0);
-		endwin();
-		pprime = prime;
-		pchen = chen;
-		pverne = verne;
-		cout << "What is your name?(Max 16 characters)\n";
-		std::string in;
-		getline(cin, in);
-		if(in == "llama") {
-			exit(EXIT_SUCCESS);}
-		if(in == "Llama") {
-			exit(EXIT_SUCCESS);}
-		if(in.length() > 16) {
-			cout << "Name too long!\n";
-			getname();
-		} else if(in != "") {
-			plr.name[0] = in;
-			savechecked1 = 1;
-		}
-	}
-}
-
-void savecheck() {
-	if (FILE *file = fopen((dir + "Saves/savegame").c_str(), "r")) {
-		fclose(file);
-		text.resize(0);
-		text.push_back("Would you like to load your save?");
-		noi = 1;
-		usr = cmenu(9, text);
-		if(usr == 1) {
-			load();
-		}
-		if(usr == 2) {
-			newg = 1;
-		}
-	} else {
-		newg = 1;
-	}
-	if(newg == 1) {
-		if(savechecked1 == 0) {
-			getname();}
-	}
-	savechecked = 1;
-}
-
-void getdir() {
-	if(os == 2) {
-		char path[1024];
-		uint32_t size = sizeof(path);
-		if (_NSGetExecutablePath(path, &size) == 0)
-			dir = path;
-	}
-	dir = dir.substr(0, dir.size()-18);
-}
 
 int main() {
 	getdir();
@@ -290,6 +119,23 @@ int main() {
 	endwin();
 	system("clear");
 	text.resize(0);
+	loadbar();
+}
+
+void loadbar() {
+	initscr();
+	cbreak();
+	noecho();
+	clear();
+
+	mvprintw(0, 56, "Loading Game...");
+	for(i=0; i < 60; i++) {
+		mvaddch(1, i + 30, ACS_CKBOARD);
+		refresh();
+		usleep(i*1000);
+	}
+	clear();
+	endwin();
 	mainm();
 }
 
@@ -1280,6 +1126,9 @@ int cmenu(int set, std::vector<std::string> text) {
 				break;
 			case 83:
 				save();
+				prints("Game Saved!");
+				refresh();
+				wrefresh(info);
 				break;
 			//If user presses control key
 			case BUTTON_CTRL:
@@ -1417,4 +1266,157 @@ void play_sound(std::string MUS_PATH) {
 	/* Start playing */
 	SDL_PauseAudio(0);
 	isAudio = true;
+}
+
+void checkaudio() {
+	if( audio_len > 0 ) {
+		SDL_Delay(100);
+	}
+	if(audio_len == 0 && isAudio == true) {
+		SDL_CloseAudio();
+		SDL_FreeWAV(wav_buffer);
+		isAudio = false;
+	}
+}
+
+void clean() {
+	//TO-DO: figure out a better alternative to this
+	if(scrn==true) {
+		for(i = 0; i < lines; i++) {
+			wmove(info, lines, 0);
+			clrtoeol();
+		}
+		for(i = 0; i < ulines; i++) {
+			wmove(user, ulines, 0);
+			clrtoeol();
+		}
+		for(i = 0; i < plines; i++) {
+			wmove(wpart, plines, 0);
+			clrtoeol();
+		}
+	}
+	lines = 0;
+	ulines = 0;
+	plines = 0;
+}
+
+void modcheck() {
+	//Need to fix this- will always be true
+	if (dir != "") {
+		text.resize(0);
+		text.push_back("Would you like to enable your mods?");
+		noi = 1;
+		usr = cmenu(9, text);
+		if(usr == 1) {
+			modon = true;
+		}
+		if(usr == 2) {
+			modon = false;
+		}
+		noi = 0;
+	}
+	if(modon == true) {
+		int total = -1;
+		std::string line;
+		std::ifstream file;
+		file.open((dir + "Mods/extra").c_str());
+
+		if(!file.is_open()) {
+			perror("Error opening mod");
+		}
+		std::string data[1000];
+		int r = 0;
+		while(getline(file, line, ',')) {
+			data[r] = line;
+			r++;
+		}
+		for(i=0; i < 3; i++){
+			total++;
+			e0.info[i] = data[total];}
+		for(i=0;i < 5; i++){
+			total++;
+			e0.stat[i] = std::stoi(data[total]);}
+		for(i=0; i < 4; i++){
+			total++;
+			e0.xp[i] = std::stoi(data[total]);}
+		for(i=0; i < 2; i++){
+			total++;
+			e0.skill[i] = std::stoi(data[total]);}
+		if(r > 20) {
+			for(i=0; i < 3; i++){
+				total++;
+				e1.info[i] = data[total];}
+			for(i=0;i < 5; i++){
+				total++;
+				e1.stat[i] = std::stoi(data[total]);}
+			for(i=0; i < 4; i++){
+				total++;
+				e1.xp[i] = std::stoi(data[total]);}
+			for(i=0; i < 2; i++){
+				total++;
+				e1.skill[i] = std::stoi(data[total]);}
+		}
+		file.close();
+	}
+	usr = 0;
+	modchecked = 1;
+}
+
+void getname() {
+	if(newg == 1) {
+		erase();
+		system("clear");
+		move(1, 0);
+		endwin();
+		pprime = prime;
+		pchen = chen;
+		pverne = verne;
+		cout << "What is your name?(Max 16 characters)\n";
+		std::string in;
+		getline(cin, in);
+		if(in == "llama") {
+			exit(EXIT_SUCCESS);}
+		if(in == "Llama") {
+			exit(EXIT_SUCCESS);}
+		if(in.length() > 16) {
+			cout << "Name too long!\n";
+			getname();
+		} else if(in != "") {
+			plr.name[0] = in;
+			savechecked1 = 1;
+		}
+	}
+}
+
+void savecheck() {
+	if (FILE *file = fopen((dir + "Saves/savegame").c_str(), "r")) {
+		fclose(file);
+		text.resize(0);
+		text.push_back("Would you like to load your save?");
+		noi = 1;
+		usr = cmenu(9, text);
+		if(usr == 1) {
+			load();
+		}
+		if(usr == 2) {
+			newg = 1;
+		}
+	} else {
+		newg = 1;
+	}
+	if(newg == 1) {
+		if(savechecked1 == 0) {
+			getname();}
+	}
+	savechecked = 1;
+}
+
+void getdir() {
+	if(os == 2) {
+		char path[1024];
+		uint32_t size = sizeof(path);
+		if (_NSGetExecutablePath(path, &size) == 0)
+			dir = path;
+	}
+	dir = dir.substr(0, dir.size()-18);
 }
