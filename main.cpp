@@ -26,7 +26,8 @@ WINDOW *wpart;
 WINDOW *arrows;
 WINDOW *pname;
 
-Mix_Music *bgsong;  // Background Music
+int loops;
+Mix_Music *bgsong[20];  // Background Music
 Mix_Chunk *lvlup, *ehit, *uhit, *ahit;  // For Sounds
 
 player plr ={{"Player"}, {25, 25, 7, 1, 2, 15, 10}, {0, 20, 1, 10}};
@@ -86,11 +87,13 @@ std::string mapinfo[10][10] = {
 };
 
 void setsound() {
+	int flags = MIX_INIT_MP3;
 	if( SDL_Init(SDL_INIT_AUDIO) < 0 ){
 		return;
 	}
-	Mix_OpenAudio(44100, AUDIO_F32, 2, 640);
-	bgsong = Mix_LoadMUS((dir + "Sounds/testsong.wav").c_str());
+	Mix_Init(flags);
+	Mix_OpenAudio(48000, AUDIO_S16, 2, 4960);
+	bgsong[0] = Mix_LoadMUS((dir + "Sounds/bgmusic/testsong.wav").c_str());
 	lvlup = Mix_LoadWAV((dir + "Sounds/count.wav").c_str());
 
 }
@@ -142,6 +145,7 @@ void loadbar() {
 	}
 	erase();
 	endwin();
+	Mix_PlayMusic(bgsong[0],-1);
 	mainm();
 }
 
@@ -331,7 +335,6 @@ void keeppart() {
 }
 
 void mainm() {
-	Mix_PlayMusic(bgsong,-1);
 	text.resize(0);
 	text.push_back("Select a thing:");
 	usr = cmenu(0, text);
