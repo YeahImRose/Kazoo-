@@ -5,6 +5,8 @@
 #include <SDL.h>
 #include <SDL_mixer.h>
 
+//#define gamev "Pre-Alpha 0.5"
+
 #ifdef _WIN32
 	#define os 1
 #endif
@@ -87,7 +89,7 @@ void setsound() {
 	if( SDL_Init(SDL_INIT_AUDIO) < 0 ){
 		return;
 	}
-	Mix_OpenAudio(44100, AUDIO_S16SYS, 2, 640);
+	Mix_OpenAudio(44100, AUDIO_F32, 2, 640);
 	bgsong = Mix_LoadMUS((dir + "Sounds/testsong.wav").c_str());
 	lvlup = Mix_LoadWAV((dir + "Sounds/count.wav").c_str());
 
@@ -329,7 +331,7 @@ void keeppart() {
 }
 
 void mainm() {
-	//Mix_PlayMusic(bgsong,-1);
+	Mix_PlayMusic(bgsong,-1);
 	text.resize(0);
 	text.push_back("Select a thing:");
 	usr = cmenu(0, text);
@@ -684,7 +686,7 @@ void enemydefeat() {
 	} else if(pup == 1) {
 			queue.push_back(part.info[0] + " leveled up!");}}
 	if(uup > 0) { if(uup > 1) {
-			queue.push_back("You leveled up " + std::to_string(uup) + " times!");
+			queue.push_back("You leveld up " + std::to_string(uup) + " times!");
 			//lvlups = std::thread(play_sound,"Sounds/count.wav");
 			Mix_PlayChannel(-1,lvlup,0);
 	} else if(uup == 1) {
