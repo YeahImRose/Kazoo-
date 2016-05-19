@@ -1393,5 +1393,5 @@ void getdir() {
 		if (_NSGetExecutablePath(path, &size) == 0)
 			dir = path;
 	}
-	dir = dir.substr(0, dir.size()-14);
+	dir = dir.substr(0, dir.size()-12);
 }
