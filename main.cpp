@@ -100,8 +100,6 @@ void setsound() {
 
 int main() {
 	getdir();
-	printf("%s", dir.c_str());
-	exit(EXIT_SUCCESS);
 	setsound();
 	part = noally;
 	curs_set(FALSE);
@@ -1395,5 +1393,5 @@ void getdir() {
 		if (_NSGetExecutablePath(path, &size) == 0)
 			dir = path;
 	}
-	dir = dir.substr(0, dir.size()-18);
+	dir = dir.substr(0, dir.size()-15);
 }
