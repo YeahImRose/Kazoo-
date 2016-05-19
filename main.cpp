@@ -100,6 +100,8 @@ void setsound() {
 
 int main() {
 	getdir();
+	printf("%s", dir.c_str());
+	exit(EXIT_SUCCESS);
 	setsound();
 	part = noally;
 	curs_set(FALSE);
