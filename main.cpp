@@ -26,7 +26,6 @@ WINDOW *wpart;
 WINDOW *arrows;
 WINDOW *pname;
 
-int loops;
 Mix_Music *bgsong[20];  // Background Music
 Mix_Chunk *lvlup, *ehit, *uhit, *ahit;  // For Sounds
 
@@ -86,6 +85,19 @@ std::string mapinfo[10][10] = {
 		{"Nothing", "Nothing", "Nothing", "Nothing", "Nothing", "Nothing", "Nothing", "Nothing", "Nothing", "Nothing"}
 };
 
+/*void musicPlayer(void *udata, Uint8 *stream, int len)
+{
+    int i, pos=*(int*)udata;
+
+    // fill buffer with...uh...music...
+    for(i=0; i<len; i++)
+        stream[i]=(i+pos);
+
+    // set udata for next time
+    pos+=len;
+    *(int*)udata=pos;
+}*/
+
 void setsound() {
 	int flags = MIX_INIT_MP3;
 	if( SDL_Init(SDL_INIT_AUDIO) < 0 ){
@@ -94,12 +106,29 @@ void setsound() {
 	Mix_Init(flags);
 	Mix_OpenAudio(48000, AUDIO_S16, 2, 4960);
 	bgsong[0] = Mix_LoadMUS((dir + "Sounds/bgmusic/testsong.wav").c_str());
+	for(i=0;i < songs.size(); i++) {
+		std::string sname = songs[i];
+		bgsong[i] = Mix_LoadMUS(((dir + "Sounds/bgmusic/" + sname).c_str()));
+	}
 	lvlup = Mix_LoadWAV((dir + "Sounds/count.wav").c_str());
 	Mix_VolumeMusic(MIX_MAX_VOLUME/2);
 }
-
+int music_pos=0;
 int main() {
 	getdir();
+	struct dirent *pDirent;
+	DIR *pDir;
+    pDir = opendir ((dir + "/Sounds/bgmusic").c_str());
+    if (pDir == NULL) {
+        printf ("Cannot open directory '%s'\n", (dir + "/Sounds/bgmusic").c_str());
+        return 1;
+    }
+	while ((pDirent = readdir(pDir)) != NULL) {
+		if(strcmp((pDirent->d_name), ".") == 0) {continue;}
+		if(strcmp((pDirent->d_name), "..") == 0) {continue;}
+		if(strcmp((pDirent->d_name), ".DS_Store") == 0) {continue;}
+		songs.push_back(pDirent->d_name);
+	}
 	setsound();
 	part = noally;
 	curs_set(FALSE);
@@ -111,7 +140,7 @@ int main() {
 	plr.spell[lfirebolt] = 1; plr.spell[lfrost] = 1; plr.spell[lbolt] = 1; plr.spell[lquake] = 1;
 	plr.spell[lpoison] = 1; plr.spell[llifesteal] = 1; plr.spell[lheal] = 1;
 	system("clear");
-	if(modchecked == 1) {
+	if(modchecked == 0) {
 		modcheck();
 	}
 	if(savechecked == 0) {
@@ -177,6 +206,14 @@ void help() {
 }
 
 void save() {
+	int hassave = 0;
+	if (FILE *file = fopen((dir + "Saves/savegame").c_str(), "r")) {
+		fclose(file);
+		hassave = 1;
+	}
+	if(hassave == 0) {
+		system(("mkdir " + dir + "Saves").c_str());
+	}
 	//Clear save file
 	std::ofstream ofs;
 	ofs.open((dir + "Saves/savegame").c_str(), std::ofstream::out | std::ofstream::trunc);
@@ -1062,6 +1099,11 @@ int cmenu(int set, std::vector<std::string> text) {
 	wmove(wpart, 0, 0);
 	wrefresh(pname);
 	wmove(pname, 0, 0);
+	move(26, 107); clrtoeol();refresh();
+	move(25, 95); clrtoeol();refresh();
+	mvprintw(26, 107, "%d", (vol));
+	//mvprintw(26, 107, "%s", (vol));
+	refresh();
 	move(11, 0);
 	while((c = wgetch(wmenu))){
 		switch(c) {
@@ -1277,7 +1319,8 @@ void clean() {
 
 void modcheck() {
 	//Need to fix this- will always be true
-	if ("hsdbdjhb" != "") {
+	if (FILE *file = fopen((dir + "Mods/extra").c_str(), "r")) {
+		fclose(file);
 		text.resize(0);
 		text.push_back("Would you like to enable your mods?");
 		noi = 1;
@@ -1393,5 +1436,5 @@ void getdir() {
 		if (_NSGetExecutablePath(path, &size) == 0)
 			dir = path;
 	}
-	dir = dir.substr(0, dir.size()-12);
+	dir = dir.substr(0, dir.size()-18);
 }
