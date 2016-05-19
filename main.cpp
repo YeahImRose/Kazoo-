@@ -5,7 +5,7 @@
 #include <SDL.h>
 #include <SDL_mixer.h>
 
-//#define gamev "Pre-Alpha 0.5"
+#define gamev "Pre-Alpha 0.52"
 
 #ifdef _WIN32
 	#define os 1
@@ -95,7 +95,7 @@ void setsound() {
 	Mix_OpenAudio(48000, AUDIO_S16, 2, 4960);
 	bgsong[0] = Mix_LoadMUS((dir + "Sounds/bgmusic/testsong.wav").c_str());
 	lvlup = Mix_LoadWAV((dir + "Sounds/count.wav").c_str());
-
+	Mix_VolumeMusic(MIX_MAX_VOLUME/2);
 }
 
 int main() {
@@ -111,7 +111,7 @@ int main() {
 	plr.spell[lfirebolt] = 1; plr.spell[lfrost] = 1; plr.spell[lbolt] = 1; plr.spell[lquake] = 1;
 	plr.spell[lpoison] = 1; plr.spell[llifesteal] = 1; plr.spell[lheal] = 1;
 	system("clear");
-	if(modchecked == 0) {
+	if(modchecked == 1) {
 		modcheck();
 	}
 	if(savechecked == 0) {
@@ -963,7 +963,6 @@ int cmenu(int set, std::vector<std::string> text) {
 			items[i] = new_item(choices[set][i], choices[set+10][i]);
 		items[n_choices] = (ITEM *)NULL;
 		menu = new_menu((ITEM **)items);
-		system("echo r");
 	}
 
 	//Is inventory call
@@ -1040,6 +1039,7 @@ int cmenu(int set, std::vector<std::string> text) {
 	set_escdelay(25);
 	mvprintw(28, 1, "%d, %d", (highlight + (page*5)), page);
 	mvprintw(28, 100, "Press \"?\" for help");
+	mvprintw(26, 100, "Volume:");
 	if(set == 100) {
 		werase(arrows);
 		if(page == 0) {
@@ -1137,6 +1137,26 @@ int cmenu(int set, std::vector<std::string> text) {
 				refresh();
 				wrefresh(info);
 				break;
+			case 43:
+				if(vol < 128) {
+					vol++;vol++;
+				} else if(vol == 128) {
+					vol = 128; }
+				Mix_VolumeMusic(vol);
+				move(26, 107); clrtoeol();refresh();
+				mvprintw(26, 107, "%d", (vol));
+				refresh();
+				break;
+			case 45:
+				if(vol > 0) {
+					vol--;vol--;
+				} else if(vol == 0) {
+					vol = 0; }
+				Mix_VolumeMusic(vol);
+				move(26, 107); clrtoeol();refresh();
+				mvprintw(26, 107, "%d", (vol));
+				refresh();
+				break;
 			//If user presses control key
 			case BUTTON_CTRL:
 				//This is beautiful, works like a charm :)
@@ -1163,6 +1183,7 @@ int cmenu(int set, std::vector<std::string> text) {
 				}
 				break;
 			default:
+				mvprintw(26, 107, "%d", (vol));
 				mvprintw(28, 1, "%d, %d", highlight, page);
 				refresh();
 				wrefresh(wmenu);
@@ -1256,7 +1277,7 @@ void clean() {
 
 void modcheck() {
 	//Need to fix this- will always be true
-	if (dir != "") {
+	if ("hsdbdjhb" != "") {
 		text.resize(0);
 		text.push_back("Would you like to enable your mods?");
 		noi = 1;

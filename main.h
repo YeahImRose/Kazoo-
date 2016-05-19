@@ -13,6 +13,8 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <sys/types.h>
+#include <dirent.h>
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -38,6 +40,7 @@ int agil, dodge, dam, enerand;
 //Menu variables + some
 int highlight, n_choices, i, c, ch, t, noi, fmenu, xpos, ypos, pages;
 int ulines = 0, plines = 0, lines = 0, page = 0, pup = 0, uup = 0, modchecked = 0, haspart = 0, newg = 0, savechecked = 0, savechecked1 = 0;
+int vol = 64;
 int c_choices[10] = {6, 4, 5, 7, 4, 3, 2, 0, 0, 2};
 bool scrn = false;
 bool modon;
