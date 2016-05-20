@@ -28,6 +28,7 @@ WINDOW *pname;
 
 Mix_Music *bgsong[20];  // Background Music
 Mix_Chunk *lvlup, *ehit, *uhit, *ahit;  // For Sounds
+wav_hdr wavHeader;
 
 player plr ={{"Player"}, {25, 25, 7, 1, 2, 15, 10}, {0, 20, 1, 10}};
 
@@ -98,22 +99,45 @@ std::string mapinfo[10][10] = {
     *(int*)udata=pos;
 }*/
 
+int getFileSize(FILE* inFile)
+{
+    int fileSize = 0;
+    fseek(inFile, 0, SEEK_END);
+
+    fileSize = ftell(inFile);
+
+    fseek(inFile, 0, SEEK_SET);
+    return fileSize;
+}
+
+void musicFinished() {
+	Mix_ExpireChannel(-1, 1);
+	loops++;
+	int lks = loops % songs.size();
+	Mix_PlayMusic(bgsong[lks],0);
+	move(25, 20); clrtoeol();
+	std::string nowsong = songs[lks];
+	nowsong = nowsong.substr(0, nowsong.size()-4);
+	mvprintw(25, 20, nowsong.c_str());
+	refresh();
+}
+
 void setsound() {
 	int flags = MIX_INIT_MP3;
 	if( SDL_Init(SDL_INIT_AUDIO) < 0 ){
 		return;
 	}
 	Mix_Init(flags);
-	Mix_OpenAudio(48000, AUDIO_S16, 2, 4960);
-	bgsong[0] = Mix_LoadMUS((dir + "Sounds/bgmusic/testsong.wav").c_str());
+	Mix_OpenAudio(44100, AUDIO_S16, 2, 4960);
 	for(i=0;i < songs.size(); i++) {
 		std::string sname = songs[i];
 		bgsong[i] = Mix_LoadMUS(((dir + "Sounds/bgmusic/" + sname).c_str()));
 	}
 	lvlup = Mix_LoadWAV((dir + "Sounds/count.wav").c_str());
 	Mix_VolumeMusic(MIX_MAX_VOLUME/2);
+	Mix_HookMusicFinished(musicFinished);
 }
-int music_pos=0;
+
 int main() {
 	getdir();
 	struct dirent *pDirent;
@@ -174,7 +198,7 @@ void loadbar() {
 	}
 	erase();
 	endwin();
-	Mix_PlayMusic(bgsong[0],-1);
+	Mix_PlayMusic(bgsong[0],0);
 	mainm();
 }
 
@@ -1074,9 +1098,10 @@ int cmenu(int set, std::vector<std::string> text) {
 	}
 	post_menu(menu);
 	set_escdelay(25);
-	mvprintw(28, 1, "%d, %d", (highlight + (page*5)), page);
+	//mvprintw(28, 1, "%d, %d", (highlight + (page*5)), page);
 	mvprintw(28, 100, "Press \"?\" for help");
-	mvprintw(26, 100, "Volume:");
+	mvprintw(25, 1, "Currently Playing:");
+	mvprintw(26, 1, "Volume:");
 	if(set == 100) {
 		werase(arrows);
 		if(page == 0) {
@@ -1099,9 +1124,13 @@ int cmenu(int set, std::vector<std::string> text) {
 	wmove(wpart, 0, 0);
 	wrefresh(pname);
 	wmove(pname, 0, 0);
-	move(26, 107); clrtoeol();refresh();
-	move(25, 95); clrtoeol();refresh();
-	mvprintw(26, 107, "%d", (vol));
+	move(26, 8); clrtoeol();
+	mvprintw(26, 8, "%d%%", (vol * 100 / 128));
+	move(25, 20); clrtoeol();
+	int lks = loops % songs.size();
+	std::string nowsong = songs[lks];
+	nowsong = nowsong.substr(0, nowsong.size()-4);
+	mvprintw(25, 20, nowsong.c_str());
 	//mvprintw(26, 107, "%s", (vol));
 	refresh();
 	move(11, 0);
@@ -1114,7 +1143,7 @@ int cmenu(int set, std::vector<std::string> text) {
 				else
 					--highlight;
 				menu_driver(menu, REQ_UP_ITEM);
-				mvprintw(28, 1, "%d, %d", (highlight + (page*5)), page);
+				//mvprintw(28, 1, "%d, %d", (highlight + (page*5)), page);
 				refresh();
 				wrefresh(wmenu);
 				break;
@@ -1125,7 +1154,7 @@ int cmenu(int set, std::vector<std::string> text) {
 				} else {
 					++highlight;
 				}
-				mvprintw(28, 1, "%d, %d", (highlight + (page*5)), page);
+				//mvprintw(28, 1, "%d, %d", (highlight + (page*5)), page);
 				menu_driver(menu, REQ_DOWN_ITEM);
 				refresh();
 				wrefresh(wmenu);
@@ -1169,6 +1198,14 @@ int cmenu(int set, std::vector<std::string> text) {
 					test = item_name(current_item(menu));
 				}
 				break;
+			case 60:
+				loops -= 2;
+				musicFinished();
+				break;
+			//">" key
+			case 62:
+				musicFinished();
+				break;
 			//User presses "?" key
 			case 63:
 				help();
@@ -1185,8 +1222,8 @@ int cmenu(int set, std::vector<std::string> text) {
 				} else if(vol == 128) {
 					vol = 128; }
 				Mix_VolumeMusic(vol);
-				move(26, 107); clrtoeol();refresh();
-				mvprintw(26, 107, "%d", (vol));
+				move(26, 8); clrtoeol();refresh();
+				mvprintw(26, 8, "%d%%", (vol * 100 / 128));
 				refresh();
 				break;
 			case 45:
@@ -1195,8 +1232,8 @@ int cmenu(int set, std::vector<std::string> text) {
 				} else if(vol == 0) {
 					vol = 0; }
 				Mix_VolumeMusic(vol);
-				move(26, 107); clrtoeol();refresh();
-				mvprintw(26, 107, "%d", (vol));
+				move(26, 8); clrtoeol();refresh();
+				mvprintw(26, 8, "%d%%", (vol * 100 / 128));
 				refresh();
 				break;
 			//If user presses control key
@@ -1225,8 +1262,9 @@ int cmenu(int set, std::vector<std::string> text) {
 				}
 				break;
 			default:
-				mvprintw(26, 107, "%d", (vol));
-				mvprintw(28, 1, "%d, %d", highlight, page);
+				move(26, 8); clrtoeol();refresh();
+				mvprintw(26, 8, "%d%%", (vol * 100 / 128));
+				//mvprintw(28, 1, "%d, %d", highlight, page);
 				refresh();
 				wrefresh(wmenu);
 				break;
