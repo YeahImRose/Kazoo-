@@ -4,6 +4,10 @@
 #include "allies.h"
 #include <SDL.h>
 #include <SDL_mixer.h>
+/*extern "C" {
+	#include <avcodec>
+	#include <avformat>
+}*/
 
 #define gamev "Pre-Alpha 0.52"
 
@@ -26,7 +30,7 @@ WINDOW *wpart;
 WINDOW *arrows;
 WINDOW *pname;
 
-Mix_Music *bgsong[20];  // Background Music
+Mix_Music *bgsong[50];  // Background Music
 Mix_Chunk *lvlup, *ehit, *uhit, *ahit;  // For Sounds
 wav_hdr wavHeader;
 
@@ -99,15 +103,10 @@ std::string mapinfo[10][10] = {
     *(int*)udata=pos;
 }*/
 
-int getFileSize(FILE* inFile)
-{
-    int fileSize = 0;
-    fseek(inFile, 0, SEEK_END);
-
-    fileSize = ftell(inFile);
-
-    fseek(inFile, 0, SEEK_SET);
-    return fileSize;
+void convertFile(std::string file) {
+	file = file.substr(0, file.size()-4);
+	system((dir + "/mp3towav.sh \"" + dir + "Sounds/bgmusic/" + file + ".mp3\" \"" + dir + "/Sounds/bgmusic/" + file + ".wav\" ").c_str());
+	system(("rm \"" + dir + "Sounds/bgmusic/" + file + ".mp3\"").c_str());
 }
 
 void musicFinished() {
@@ -119,15 +118,14 @@ void musicFinished() {
 	std::string nowsong = songs[lks];
 	nowsong = nowsong.substr(0, nowsong.size()-4);
 	mvprintw(25, 20, nowsong.c_str());
+	move(11, 0);
 	refresh();
 }
 
 void setsound() {
-	int flags = MIX_INIT_MP3;
 	if( SDL_Init(SDL_INIT_AUDIO) < 0 ){
 		return;
 	}
-	Mix_Init(flags);
 	Mix_OpenAudio(44100, AUDIO_S16, 2, 4960);
 	for(i=0;i < songs.size(); i++) {
 		std::string sname = songs[i];
@@ -151,7 +149,13 @@ int main() {
 		if(strcmp((pDirent->d_name), ".") == 0) {continue;}
 		if(strcmp((pDirent->d_name), "..") == 0) {continue;}
 		if(strcmp((pDirent->d_name), ".DS_Store") == 0) {continue;}
-		songs.push_back(pDirent->d_name);
+		std::string tname = pDirent->d_name;
+		if(tname.substr(tname.find_last_of(".")) == ".mp3") {
+			convertFile(tname);
+		}
+		tname = tname.substr(0, tname.size()-4);
+		tname += ".wav";
+		songs.push_back(tname);
 	}
 	setsound();
 	part = noally;
@@ -1115,15 +1119,15 @@ int cmenu(int set, std::vector<std::string> text) {
 	refresh();
 	wrefresh(wmenu);
 	wrefresh(arrows);
-	wmove(wmenu, 0, 0);
+	//wmove(wmenu, 0, 0);
 	wrefresh(info);
-	wmove(info, 0, 0);
+	//wmove(info, 0, 0);
 	wrefresh(user);
-	wmove(user, 0, 0);
+	//wmove(user, 0, 0);
 	wrefresh(wpart);
-	wmove(wpart, 0, 0);
+	//wmove(wpart, 0, 0);
 	wrefresh(pname);
-	wmove(pname, 0, 0);
+	//wmove(pname, 0, 0);
 	move(26, 8); clrtoeol();
 	mvprintw(26, 8, "%d%%", (vol * 100 / 128));
 	move(25, 20); clrtoeol();
@@ -1132,8 +1136,8 @@ int cmenu(int set, std::vector<std::string> text) {
 	nowsong = nowsong.substr(0, nowsong.size()-4);
 	mvprintw(25, 20, nowsong.c_str());
 	//mvprintw(26, 107, "%s", (vol));
-	refresh();
 	move(11, 0);
+	refresh();
 	while((c = wgetch(wmenu))){
 		switch(c) {
 			//If user presses up arrow
@@ -1202,6 +1206,19 @@ int cmenu(int set, std::vector<std::string> text) {
 				loops -= 2;
 				musicFinished();
 				break;
+			case 112:
+				int paused;
+				paused = 0;
+				if(Mix_PausedMusic() == 1) {
+					paused = 1;
+				}
+				if(paused == 0) {
+					Mix_PauseMusic();
+				}
+				if(paused == 1) {
+					Mix_ResumeMusic();
+				}
+				break;
 			//">" key
 			case 62:
 				musicFinished();
@@ -1224,6 +1241,7 @@ int cmenu(int set, std::vector<std::string> text) {
 				Mix_VolumeMusic(vol);
 				move(26, 8); clrtoeol();refresh();
 				mvprintw(26, 8, "%d%%", (vol * 100 / 128));
+				move(11, 0);
 				refresh();
 				break;
 			case 45:
@@ -1234,6 +1252,7 @@ int cmenu(int set, std::vector<std::string> text) {
 				Mix_VolumeMusic(vol);
 				move(26, 8); clrtoeol();refresh();
 				mvprintw(26, 8, "%d%%", (vol * 100 / 128));
+				move(11, 0);
 				refresh();
 				break;
 			//If user presses control key
@@ -1264,6 +1283,7 @@ int cmenu(int set, std::vector<std::string> text) {
 			default:
 				move(26, 8); clrtoeol();refresh();
 				mvprintw(26, 8, "%d%%", (vol * 100 / 128));
+				move(11, 0);
 				//mvprintw(28, 1, "%d, %d", highlight, page);
 				refresh();
 				wrefresh(wmenu);
