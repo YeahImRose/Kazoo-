@@ -7,5 +7,5 @@ if [[ $file == "" || $output == "" ]]; then
     echo "Usage: "
     echo "mp3towav <input_file.mp3> <output_file.wav>"
 else 
-    ffmpeg -i "$file" -bufsize 64k -ar 44100 -ac 2 "$output"
+    ffmpeg -loglevel panic -i "$file" -bufsize 64k -ar 44100 -ac 2 "$output"
 fi

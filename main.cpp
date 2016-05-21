@@ -32,6 +32,8 @@ WINDOW *pname;
 
 Mix_Music *bgsong[50];  // Background Music
 Mix_Chunk *lvlup, *ehit, *uhit, *ahit;  // For Sounds
+int songlen[50];
+int songpos = 0;
 wav_hdr wavHeader;
 
 player plr ={{"Player"}, {25, 25, 7, 1, 2, 15, 10}, {0, 20, 1, 10}};
@@ -102,6 +104,105 @@ std::string mapinfo[10][10] = {
     pos+=len;
     *(int*)udata=pos;
 }*/
+int getFileSize(FILE* inFile);
+
+int alen(std::string filePath) {
+	wav_hdr wavHeader;
+	int headerSize = sizeof(wav_hdr), filelength = 0;
+	FILE* wavFile = fopen(filePath.c_str(), "r");
+	if (wavFile == nullptr) {}
+
+	//Read the header
+	size_t bytesRead = fread(&wavHeader, 1, headerSize, wavFile);
+	//cout << "Header Read " << bytesRead << " bytes." << endl;
+	if (bytesRead > 0)
+	{
+		//Read the data
+		//uint16_t bytesPerSample = wavHeader.bitsPerSample / 8;      //Number     of bytes per sample
+		//uint64_t numSamples = wavHeader.ChunkSize / bytesPerSample; //How many samples are in the wav file?
+		static const uint16_t BUFFER_SIZE = 4096;
+		int8_t* buffer = new int8_t[BUFFER_SIZE];
+		delete [] buffer;
+		buffer = nullptr;
+		filelength = getFileSize(wavFile);
+
+		//cout << "Data size                  :" << wavHeader.ChunkSize << endl;
+		//cout << "Number of bytes per second :" << wavHeader.bytesPerSec << endl;
+
+	}
+	fclose(wavFile);
+	int len = wavHeader.ChunkSize / wavHeader.bytesPerSec;
+	wavHeader = WAV_HEADER();
+	return len;
+}
+
+void proBar() {
+	while(1) {
+	this_thread::sleep_for( chrono::seconds( 1 ) );
+	curs_set(FALSE);
+	if(Mix_PlayingMusic() == 1 && Mix_PausedMusic() == 0) {
+		songpos++;
+	}
+	int lks = loops % songs.size();
+	int dist = songpos * 25 / songlen[lks];
+	std::string sec;
+	std::string songstr;
+	std::string songsec;
+
+	if(songlen[lks] % 60 < 10) {
+		songsec = "0" + to_string(songlen[lks] % 60);
+	} else {
+		songsec = to_string(songlen[lks] % 60);
+	}
+
+	if((songlen[lks] / 60) > 9) {
+		songstr = "/" + to_string(songlen[lks] / 60) + ":" + songsec;
+	} else {
+		songstr = "/0" + to_string(songlen[lks] / 60) + ":" + songsec;
+	}
+	move(29, 0); clrtoeol();
+	//int smin = (songpos / 60);
+	if((songpos / 60) > 0) {
+		if(songpos % 60 < 10) {
+			sec = "0" + to_string(songpos % 60);
+		} else {
+			sec = to_string(songpos % 60);
+		}
+		mvprintw(29, 1, ("0" + to_string((songpos / 60)) + ":" + sec + songstr).c_str());
+	} else if((songpos / 60) > 9) {
+		if(songpos % 60 < 10) {
+			sec = "0" + to_string(songpos % 60);
+		} else {
+			sec = to_string(songpos % 60);
+		}
+		mvprintw(29, 1, (to_string((songpos / 60)) + ":" + sec + songstr).c_str());
+	} else if((songpos / 60) < 1) {
+		if(songpos % 60 < 10) {
+			sec = "0" + to_string(songpos % 60);
+		} else {
+			sec = to_string(songpos % 60);
+		}
+		mvprintw(29, 1, ("00:" + sec  + songstr).c_str());
+	}
+	mvprintw(29, 15, "[");
+	mvprintw(29, 41, "]");
+	for(i=0; i < dist; i++) {
+		mvprintw(29, i + 16, "#");
+		//mvprintw(27, 1, std::to_string(dist).c_str());
+	}
+	refresh();
+	}
+}
+
+int getFileSize(FILE* inFile) {
+    int fileSize = 0;
+    fseek(inFile, 0, SEEK_END);
+
+    fileSize = ftell(inFile);
+
+    fseek(inFile, 0, SEEK_SET);
+    return fileSize;
+}
 
 void convertFile(std::string file) {
 	file = file.substr(0, file.size()-4);
@@ -114,12 +215,13 @@ void musicFinished() {
 	loops++;
 	int lks = loops % songs.size();
 	Mix_PlayMusic(bgsong[lks],0);
-	move(25, 20); clrtoeol();
+	move(26, 20); clrtoeol();
 	std::string nowsong = songs[lks];
 	nowsong = nowsong.substr(0, nowsong.size()-4);
-	mvprintw(25, 20, nowsong.c_str());
-	move(11, 0);
+	mvprintw(26, 20, nowsong.c_str());
+	move(29, 0); clrtoeol();
 	refresh();
+	songpos = 0;
 }
 
 void setsound() {
@@ -130,6 +232,7 @@ void setsound() {
 	for(i=0;i < songs.size(); i++) {
 		std::string sname = songs[i];
 		bgsong[i] = Mix_LoadMUS(((dir + "Sounds/bgmusic/" + sname).c_str()));
+		songlen[i] = alen((dir + "Sounds/bgmusic/" + sname).c_str());
 	}
 	lvlup = Mix_LoadWAV((dir + "Sounds/count.wav").c_str());
 	Mix_VolumeMusic(MIX_MAX_VOLUME/2);
@@ -158,8 +261,9 @@ int main() {
 		songs.push_back(tname);
 	}
 	setsound();
+	std::thread bar( proBar );
+	while(1) {
 	part = noally;
-	curs_set(FALSE);
 	xpos = 1;
 	ypos = 2;
 	using namespace std;
@@ -175,6 +279,7 @@ int main() {
 		savecheck();
 	}
 	initscr();
+	curs_set(FALSE);
 	signal(SIGWINCH, NULL);
 	werase(stdscr);
 	mvprintw(1, 1, "This is the remake of the original Kazoo Quest.");
@@ -185,7 +290,12 @@ int main() {
 	endwin();
 	system("clear");
 	text.resize(0);
-	loadbar();
+
+	//Temporarily disabled due to bugs issues with proBar
+	//loadbar();
+	Mix_PlayMusic(bgsong[0],0);
+	mainm();
+	}
 }
 
 void loadbar() {
@@ -198,7 +308,7 @@ void loadbar() {
 	for(i=0; i < 60; i++) {
 		mvaddch(1, i + 30, ACS_CKBOARD);
 		refresh();
-		usleep(i*1000);
+		usleep(i*800);
 	}
 	erase();
 	endwin();
@@ -208,11 +318,15 @@ void loadbar() {
 
 void help() {
 	erase();
+	prints("Menu navigation:");
 	prints("Use the Up/Down arrow keys to navigate menus.");
 	prints("Use the Left/Right arrow keys to switch between menu pages.");
 	prints("Press escape to exit out of some menus(for example, the inventory).");
-	prints("Pressing control + c immediately closes the game.");
-	prints("Pressing shift + s saves the game.");
+	prints("Control + c immediately closes the game.");
+	prints("Shift + s saves the game.");
+	prints("");
+	prints("Music controls:");
+	prints("\"<\" goes to the previous song, \">\" goes to the next song.");
 	prints("");
 	prints("Press any key to close this screen");
 	refresh();
@@ -516,8 +630,7 @@ void makeitems(int set) {
 }
 
 void inv() {
-	wmove(wmenu, 0, 0);
-	wclrtoeol(wmenu);
+	wmove(wmenu, 0, 0); wclrtoeol(wmenu);
 	refresh();
 	text.resize(0);
 	text.push_back("Select item:");
@@ -1076,7 +1189,6 @@ int cmenu(int set, std::vector<std::string> text) {
 	if(part.info[0] != "") {
 		box(wpart, 0, 0);
 		wprintw(pname, (part.info[0] + ":").c_str());
-		wmove(wpart, 0, 0);
 		printp("HP: " + std::to_string(part.stat[1]));
 		printp("Attack: " + std::to_string(part.stat[2]));
 		printp("Defense: " + std::to_string(part.stat[3]));
@@ -1084,7 +1196,6 @@ int cmenu(int set, std::vector<std::string> text) {
 		printp("");
 		printp("Level: " + std::to_string(part.xp[2]));
 		printp("EXP: " + std::to_string(part.xp[0]) + "/" + std::to_string(part.xp[1]));
-		wmove(wpart, 0, 0);
 	}
 	if(noi == 0) {
 		box(user, 0, 0);
@@ -1098,14 +1209,13 @@ int cmenu(int set, std::vector<std::string> text) {
 		printu("");
 		printu("Level: " + std::to_string(plr.xp[2]));
 		printu("EXP: " + std::to_string(plr.xp[0]) + "/" + std::to_string(plr.xp[1]));
-		wmove(user, 0, 0);
 	}
 	post_menu(menu);
 	set_escdelay(25);
 	//mvprintw(28, 1, "%d, %d", (highlight + (page*5)), page);
 	mvprintw(28, 100, "Press \"?\" for help");
-	mvprintw(25, 1, "Currently Playing:");
-	mvprintw(26, 1, "Volume:");
+	mvprintw(26, 1, "Currently Playing:");
+	mvprintw(27, 1, "Volume:");
 	if(set == 100) {
 		werase(arrows);
 		if(page == 0) {
@@ -1119,24 +1229,17 @@ int cmenu(int set, std::vector<std::string> text) {
 	refresh();
 	wrefresh(wmenu);
 	wrefresh(arrows);
-	//wmove(wmenu, 0, 0);
 	wrefresh(info);
-	//wmove(info, 0, 0);
 	wrefresh(user);
-	//wmove(user, 0, 0);
 	wrefresh(wpart);
-	//wmove(wpart, 0, 0);
 	wrefresh(pname);
-	//wmove(pname, 0, 0);
-	move(26, 8); clrtoeol();
-	mvprintw(26, 8, "%d%%", (vol * 100 / 128));
-	move(25, 20); clrtoeol();
+	move(27, 8); clrtoeol();
+	mvprintw(27, 8, "%d%%", (vol * 100 / 128));
+	move(26, 20); clrtoeol();
 	int lks = loops % songs.size();
 	std::string nowsong = songs[lks];
 	nowsong = nowsong.substr(0, nowsong.size()-4);
-	mvprintw(25, 20, nowsong.c_str());
-	//mvprintw(26, 107, "%s", (vol));
-	move(11, 0);
+	mvprintw(26, 20, nowsong.c_str());
 	refresh();
 	while((c = wgetch(wmenu))){
 		switch(c) {
@@ -1239,9 +1342,8 @@ int cmenu(int set, std::vector<std::string> text) {
 				} else if(vol == 128) {
 					vol = 128; }
 				Mix_VolumeMusic(vol);
-				move(26, 8); clrtoeol();refresh();
-				mvprintw(26, 8, "%d%%", (vol * 100 / 128));
-				move(11, 0);
+				move(27, 8); clrtoeol();
+				mvprintw(27, 8, "%d%%", (vol * 100 / 128));
 				refresh();
 				break;
 			case 45:
@@ -1250,9 +1352,8 @@ int cmenu(int set, std::vector<std::string> text) {
 				} else if(vol == 0) {
 					vol = 0; }
 				Mix_VolumeMusic(vol);
-				move(26, 8); clrtoeol();refresh();
-				mvprintw(26, 8, "%d%%", (vol * 100 / 128));
-				move(11, 0);
+				move(27, 8); clrtoeol();
+				mvprintw(27, 8, "%d%%", (vol * 100 / 128));
 				refresh();
 				break;
 			//If user presses control key
@@ -1281,10 +1382,8 @@ int cmenu(int set, std::vector<std::string> text) {
 				}
 				break;
 			default:
-				move(26, 8); clrtoeol();refresh();
-				mvprintw(26, 8, "%d%%", (vol * 100 / 128));
-				move(11, 0);
-				//mvprintw(28, 1, "%d, %d", highlight, page);
+				move(27, 8); clrtoeol();
+				mvprintw(27, 8, "%d%%", (vol * 100 / 128));
 				refresh();
 				wrefresh(wmenu);
 				break;
@@ -1358,16 +1457,13 @@ void clean() {
 	//TO-DO: figure out a better alternative to this
 	if(scrn==true) {
 		for(i = 0; i < lines; i++) {
-			wmove(info, lines, 0);
-			clrtoeol();
+			wmove(info, lines, 0); clrtoeol();
 		}
 		for(i = 0; i < ulines; i++) {
-			wmove(user, ulines, 0);
-			clrtoeol();
+			wmove(user, ulines, 0); clrtoeol();
 		}
 		for(i = 0; i < plines; i++) {
-			wmove(wpart, plines, 0);
-			clrtoeol();
+			wmove(wpart, plines, 0); clrtoeol();
 		}
 	}
 	lines = 0;
@@ -1442,7 +1538,6 @@ void getname() {
 	if(newg == 1) {
 		erase();
 		system("clear");
-		move(1, 0);
 		endwin();
 		pprime = prime;
 		pchen = chen;
