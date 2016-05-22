@@ -314,6 +314,7 @@ int main() {
 	while ((pDirent = readdir(pDir)) != NULL) {
 		if(strcmp((pDirent->d_name), ".") == 0) {continue;}
 		if(strcmp((pDirent->d_name), "..") == 0) {continue;}
+		if(strcmp((pDirent->d_name), ".gitignore") == 0) {continue;}
 		if(strcmp((pDirent->d_name), ".DS_Store") == 0) {continue;}
 		std::string tname = pDirent->d_name;
 		if(tname.substr(tname.find_last_of(".")) == ".mp3") {
