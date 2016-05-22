@@ -16,6 +16,7 @@
 #include <sys/types.h>
 #include <dirent.h>
 #include <iostream>
+#include <iomanip>
 #include <fstream>
 #include <string>
 #include <vector>
@@ -97,6 +98,26 @@ typedef struct  WAV_HEADER
     uint8_t         Subchunk2ID[4]; // "data"  string
     uint32_t        Subchunk2Size;  // Sampled data length
 } wav_hdr;
+
+#pragma pack(1)
+struct MP3Hdr {
+    char tag[3];
+    unsigned char maj_ver;
+    unsigned char min_ver;
+    unsigned char flags;
+    unsigned int  size;
+};
+struct MP3ExtHdr {
+    unsigned int  size;
+    unsigned char num_flag_bytes;
+    unsigned char extended_flags;
+};
+struct MP3FrameHdr {
+    char frame_id[4];
+    unsigned size;
+    unsigned char flags[2];
+};
+#pragma pack()
 
 enum statusBuff {
 	regen=0,

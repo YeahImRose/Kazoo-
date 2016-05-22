@@ -106,33 +106,52 @@ std::string mapinfo[10][10] = {
 }*/
 int getFileSize(FILE* inFile);
 
+unsigned DecodeMP3SafeInt(unsigned nVal)
+{
+    // nVal has 4 bytes (8-bits each)
+    //  - discard most significant bit from each byte
+    //  - reverse byte order
+    //  - concatenate the 4 * 7-bit nibbles into a 24-bit size.
+    unsigned char *pValParts = reinterpret_cast<unsigned char *>(&nVal);
+    return (pValParts[3] & 0x7F)         |
+            ((pValParts[2] & 0x7F) << 7)  |
+            ((pValParts[1] & 0x7F) << 14) |
+            ((pValParts[0] & 0x7F) << 21);
+}
+
 int alen(std::string filePath) {
-	wav_hdr wavHeader;
-	int headerSize = sizeof(wav_hdr), filelength = 0;
-	FILE* wavFile = fopen(filePath.c_str(), "r");
-	if (wavFile == nullptr) {}
+	int len = 0;
+	if(filePath.substr(filePath.find_last_of(".")) == ".wav") {
+		wav_hdr wavHeader;
+		int headerSize = sizeof(wav_hdr), filelength = 0;
+		FILE* wavFile = fopen(filePath.c_str(), "r");
+		if (wavFile == nullptr) {}
 
-	//Read the header
-	size_t bytesRead = fread(&wavHeader, 1, headerSize, wavFile);
-	//cout << "Header Read " << bytesRead << " bytes." << endl;
-	if (bytesRead > 0)
-	{
-		//Read the data
-		//uint16_t bytesPerSample = wavHeader.bitsPerSample / 8;      //Number     of bytes per sample
-		//uint64_t numSamples = wavHeader.ChunkSize / bytesPerSample; //How many samples are in the wav file?
-		static const uint16_t BUFFER_SIZE = 4096;
-		int8_t* buffer = new int8_t[BUFFER_SIZE];
-		delete [] buffer;
-		buffer = nullptr;
-		filelength = getFileSize(wavFile);
+		//Read the header
+		size_t bytesRead = fread(&wavHeader, 1, headerSize, wavFile);
+		//cout << "Header Read " << bytesRead << " bytes." << endl;
+		if (bytesRead > 0)
+		{
+			//Read the data
+			//uint16_t bytesPerSample = wavHeader.bitsPerSample / 8;      //Number     of bytes per sample
+			//uint64_t numSamples = wavHeader.ChunkSize / bytesPerSample; //How many samples are in the wav file?
+			static const uint16_t BUFFER_SIZE = 4096;
+			int8_t* buffer = new int8_t[BUFFER_SIZE];
+			delete [] buffer;
+			buffer = nullptr;
+			filelength = getFileSize(wavFile);
 
-		//cout << "Data size                  :" << wavHeader.ChunkSize << endl;
-		//cout << "Number of bytes per second :" << wavHeader.bytesPerSec << endl;
+			//cout << "Data size                  :" << wavHeader.ChunkSize << endl;
+			//cout << "Number of bytes per second :" << wavHeader.bytesPerSec << endl;
 
+		}
+		fclose(wavFile);
+		len = wavHeader.ChunkSize / wavHeader.bytesPerSec;
+		wavHeader = WAV_HEADER();
 	}
-	fclose(wavFile);
-	int len = wavHeader.ChunkSize / wavHeader.bytesPerSec;
-	wavHeader = WAV_HEADER();
+	if(filePath.substr(filePath.find_last_of(".")) == ".mp3") {
+		//Question life
+	}
 	return len;
 }
 
@@ -205,6 +224,7 @@ int getFileSize(FILE* inFile) {
 }
 
 void convertFile(std::string file) {
+	//TO DO: Find Windows solution for this
 	file = file.substr(0, file.size()-4);
 	system((dir + "/mp3towav.sh \"" + dir + "Sounds/bgmusic/" + file + ".mp3\" \"" + dir + "/Sounds/bgmusic/" + file + ".wav\" ").c_str());
 	system(("rm \"" + dir + "Sounds/bgmusic/" + file + ".mp3\"").c_str());
@@ -214,18 +234,61 @@ void musicFinished() {
 	Mix_ExpireChannel(-1, 1);
 	loops++;
 	int lks = loops % songs.size();
+	std::string nowsong = songs[lks];
+	std::string sec;
+	std::string songstr;
+	std::string songsec;
 	Mix_PlayMusic(bgsong[lks],0);
 	move(26, 20); clrtoeol();
-	std::string nowsong = songs[lks];
 	nowsong = nowsong.substr(0, nowsong.size()-4);
 	mvprintw(26, 20, nowsong.c_str());
 	move(29, 0); clrtoeol();
+	if(songlen[lks] % 60 < 10) {
+		songsec = "0" + to_string(songlen[lks] % 60);
+	} else {
+		songsec = to_string(songlen[lks] % 60);
+	}
+
+	if((songlen[lks] / 60) > 9) {
+		songstr = "/" + to_string(songlen[lks] / 60) + ":" + songsec;
+	} else {
+		songstr = "/0" + to_string(songlen[lks] / 60) + ":" + songsec;
+	}
+	move(29, 0); clrtoeol();
+	//int smin = (songpos / 60);
+	if((songpos / 60) > 0) {
+		if(songpos % 60 < 10) {
+			sec = "0" + to_string(songpos % 60);
+		} else {
+			sec = to_string(songpos % 60);
+		}
+		mvprintw(29, 1, ("0" + to_string((songpos / 60)) + ":" + sec + songstr).c_str());
+	} else if((songpos / 60) > 9) {
+		if(songpos % 60 < 10) {
+			sec = "0" + to_string(songpos % 60);
+		} else {
+			sec = to_string(songpos % 60);
+		}
+		mvprintw(29, 1, (to_string((songpos / 60)) + ":" + sec + songstr).c_str());
+	} else if((songpos / 60) < 1) {
+		if(songpos % 60 < 10) {
+			sec = "0" + to_string(songpos % 60);
+		} else {
+			sec = to_string(songpos % 60);
+		}
+		mvprintw(29, 1, ("00:" + sec  + songstr).c_str());
+	}
+	mvprintw(29, 15, "[");
+	mvprintw(29, 41, "]");
 	refresh();
 	songpos = 0;
 }
 
 void setsound() {
 	if( SDL_Init(SDL_INIT_AUDIO) < 0 ){
+		return;
+	}
+	if( Mix_Init(MIX_INIT_MP3) < 0 ){
 		return;
 	}
 	Mix_OpenAudio(44100, AUDIO_S16, 2, 4960);
